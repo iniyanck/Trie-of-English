@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Lattice Trie Visualization</title>
+    <style>
+        body { margin: 0; overflow: hidden; font-family: sans-serif; }
+        #graph-container {
+            width: 100vw;
+            height: 100vh;
+            background-color: #f0f0f0;
+            position: relative;
+        }
+        .node {
+            fill: #69b3a2;
+            stroke: #fff;
+            stroke-width: 1.5px;
+            cursor: grab;
+        }
+        .node.root {
+            fill: #c6dbef;
+        }
+        .node.end-of-word {
+            stroke: #e0ac2b;
+            stroke-width: 3px;
+        }
+        .link {
+            stroke: #999;
+            stroke-opacity: 0.6;
+            stroke-width: 1px;
+        }
+        .node-label, .link-label {
+            font-size: 10px;
+            fill: #333;
+            pointer-events: none;
+            user-select: none;
+        }
+        .hover-box {
+            position: absolute;
+            background-color: rgba(255, 255, 255, 0.95);
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 5px;
+            pointer-events: none;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-width: 300px;
+            z-index: 100;
+            display: none; /* Hidden by default */
+        }
+        .hover-box h4 {
+            margin-top: 0;
+            margin-bottom: 5px;
+            color: #333;
+        }
+        .hover-box p {
+            margin: 0;
+            color: #555;
+            font-size: 12px;
+        }
+        .hover-box ul {
+            list-style: none;
+            padding: 0;
+            margin: 5px 0 0 0;
+        }
+        .hover-box li {
+            font-size: 11px;
+            color: #666;
+            line-height: 1.4;
+        }
+    </style>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+<body>
+    <div id="graph-container"></div>
+    <div class="hover-box" id="hover-box"></div>
+
+    <script>
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+
+        const svg = d3.select("#graph-container")
+            .append("svg")
+            .attr("width", width)
+            .attr("height", height)
+            .call(d3.zoom().on("zoom", function ({ transform }) {
+                g.attr("transform", transform);
+            }));
+
+        const g = svg.append("g"); // Group for all elements to be transformed by zoom/pan
+
+        const linkGroup = g.append("g").attr("class", "links");
+        const nodeGroup = g.append("g").attr("class", "nodes");
+        const linkLabelGroup = g.append("g").attr("class", "link-labels");
+        const nodeLabelGroup = g.append("g").attr("class", "node-labels");
+        const hoverBox = d3.select("#hover-box");
+
+        d3.json("../lattice_trie_graph.json").then(graph => {
+            // Find the root node and fix its position
+            const rootNode = graph.nodes.find(d => d.name === 'ROOT');
+            if (rootNode) {
+                rootNode.fx = width / 2;
+                rootNode.fy = height / 2;
+            }
+
+            const simulation = d3.forceSimulation(graph.nodes)
+                .force("link", d3.forceLink(graph.links).id(d => d.id).distance(50))
+                .force("charge", d3.forceManyBody().strength(-300))
+                .force("center", d3.forceCenter(width / 2, height / 2)); // Center force still good for overall layout
+
+            const link = linkGroup
+                .selectAll("line")
+                .data(graph.links)
+                .join("line")
+                .attr("class", "link");
+
+            const linkLabel = linkLabelGroup
+                .selectAll("text")
+                .data(graph.links)
+                .join("text")
+                .attr("class", "link-label")
+                .text(d => d.label);
+
+            const node = nodeGroup
+                .selectAll("circle")
+                .data(graph.nodes)
+                .join("circle")
+                .attr("r", 10)
+                .attr("class", d => `node ${d.name === 'ROOT' ? 'root' : ''} ${d.isEndOfWord ? 'end-of-word' : ''}`)
+                .call(d3.drag()
+                    .on("start", dragstarted)
+                    .on("drag", dragged)
+                    .on("end", dragended))
+                .on("mouseover", showHoverBox)
+                .on("mousemove", moveHoverBox)
+                .on("mouseout", hideHoverBox);
+
+            const nodeLabel = nodeLabelGroup
+                .selectAll("text")
+                .data(graph.nodes)
+                .join("text")
+                .attr("class", "node-label")
+                .attr("dy", -15)
+                .text(d => d.name);
+
+            simulation.on("tick", () => {
+                link
+                    .attr("x1", d => d.source.x)
+                    .attr("y1", d => d.source.y)
+                    .attr("x2", d => d.target.x)
+                    .attr("y2", d => d.target.y);
+
+                linkLabel
+                    .attr("x", d => (d.source.x + d.target.x) / 2)
+                    .attr("y", d => (d.source.y + d.target.y) / 2);
+
+                node
+                    .attr("cx", d => d.x)
+                    .attr("cy", d => d.y);
+
+                nodeLabel
+                    .attr("x", d => d.x)
+                    .attr("y", d => d.y);
+            });
+
+            function dragstarted(event, d) {
+                if (!event.active) simulation.alphaTarget(0.3).restart();
+                d.fx = d.x;
+                d.fy = d.y;
+            }
+
+            function dragged(event, d) {
+                d.fx = event.x;
+                d.fy = event.y;
+            }
+
+            function dragended(event, d) {
+                if (!event.active) simulation.alphaTarget(0);
+                d.fx = null;
+                d.fy = null;
+            }
+
+            function showHoverBox(event, d) {
+                hoverBox.style("display", "block");
+                let content = `<h4>Node: "${d.name}"</h4>`;
+                content += `<p>Is End Of Word: ${d.isEndOfWord}</p>`;
+                if (d.suffixes && d.suffixes.length > 0) {
+                    content += `<p>Suffixes (from this node):</p><ul>`;
+                    d.suffixes.forEach(suffix => {
+                        content += `<li>${suffix}</li>`;
+                    });
+                    content += `</ul>`;
+                } else {
+                    content += `<p>No explicit suffixes from this node (or not an end of word).</p>`;
+                }
+                hoverBox.html(content);
+                moveHoverBox(event);
+            }
+
+            function moveHoverBox(event) {
+                const x = event.pageX + 10;
+                const y = event.pageY + 10;
+                hoverBox.style("left", `${x}px`).style("top", `${y}px`);
+            }
+
+            function hideHoverBox() {
+                hoverBox.style("display", "none");
+            }
+        });
+    </script>
+</body>
+</html>
