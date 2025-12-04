@@ -20,7 +20,8 @@ class Node:
         # Create a tuple representing the node's structure for hashing.
         # This needs to be a stable representation, so sort children keys.
         children_repr = tuple(sorted((k, id(v)) for k, v in self.children.items()))
-        return (self.char, self.is_end_of_word, children_repr, frozenset(self.words_ending_here))
+        # Removed frozenset(self.words_ending_here) from hash key to allow suffix convergence
+        return (self.char, self.is_end_of_word, children_repr)
 
     def __hash__(self):
         return hash(self._get_hash_key())
@@ -28,6 +29,7 @@ class Node:
     def __eq__(self, other):
         if not isinstance(other, Node):
             return NotImplemented
+        # Compare based on _get_hash_key, which now excludes words_ending_here
         return self._get_hash_key() == other._get_hash_key()
 
 
@@ -41,28 +43,13 @@ class LatticeTrie:
 
     def _get_canonical_node(self, node_to_canonicalize):
         # This function aims to find an existing canonical node that is equivalent
-        # to node_to_canonicalize based on its structure (children, end-of-word, words ending here).
-        # This is typically applied bottom-up in DAWG construction.
+        # to node_to_canonicalize based on its structure (children, end-of-word).
 
-        # Before canonicalizing the current node, ensure its children are canonical.
-        # This requires recursion or a stack-based approach if done during insertion.
-        # For this simplified approach, node_to_canonicalize's children should already be
-        # "canonical enough" for this level of merging.
-
-        # The key must reflect the children's *canonical* identity, not just their instance ID.
-        # This requires _get_hash_key to be recursive on canonical children.
-        # Let's simplify this for now to avoid infinite recursion / premature canonicalization.
-        
-        # A simple, potentially imperfect approach for merging:
-        # Create a representation of the node based on its char, end status, and the IDs of its children.
-        # This works if child IDs are stable (which they are once a node is canonical).
-        
         # Build a key based on the node's properties.
         # Using IDs of children implies that the children themselves are canonical.
-        # This is where DAWG construction gets tricky with incremental insertion.
         children_canonical_ids = frozenset((k, id(v)) for k, v in node_to_canonicalize.children.items())
-        key = (node_to_canonicalize.char, node_to_canonicalize.is_end_of_word, children_canonical_ids, frozenset(node_to_canonicalize.words_ending_here))
-
+        # Removed frozenset(node_to_canonicalize.words_ending_here) from key
+        key = (node_to_canonicalize.char, node_to_canonicalize.is_end_of_word, children_canonical_ids)
 
         if key in self.minimized_nodes:
             return self.minimized_nodes[key]
@@ -96,22 +83,23 @@ class LatticeTrie:
             # Get the canonical version of this node based on its current structure
             canonical_version = self._get_canonical_node(node_to_canonicalize)
 
+            # Check if canonicalization results in a different node (i.e., a merge occurred)
             if canonical_version is not node_to_canonicalize:
-                # This means 'node_to_canonicalize' is a duplicate of an existing 'canonical_version'.
-                # We need to replace 'node_to_canonicalize' with 'canonical_version' in its parent's children.
+                # Merge properties from the redundant node to the canonical version
+                if node_to_canonicalize.is_end_of_word:
+                    canonical_version.is_end_of_word = True
+                canonical_version.words_ending_here.extend(node_to_canonicalize.words_ending_here)
+                canonical_version.count += node_to_canonicalize.count # Aggregate counts for merged paths
+
+                # Replace the redundant node with the canonical version in its parent's children
                 if i > 0:
                     parent_of_current = path_nodes_stack[i-1]
                     for char_key, child_val in parent_of_current.children.items():
                         if child_val is node_to_canonicalize:
                             parent_of_current.children[char_key] = canonical_version
                             break
-                else: # If it's the first node in the path (a child of root)
-                    # This case implies the root's child needs to be swapped.
-                    # This is implicitly handled by _get_canonical_node if root's children are registered.
-                    # For simplicity, we assume root's immediate children are handled via the canonicalization logic
-                    # and won't be replaced directly here.
-                    pass
-                self.nodes.discard(node_to_canonicalize) # Remove the redundant node
+                # Remove the redundant node from our set of active nodes
+                self.nodes.discard(node_to_canonicalize)
 
     def visualize(self, max_nodes=500):
         nodes_data = []
