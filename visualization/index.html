@@ -20,15 +20,22 @@
             fill: #c6dbef;
         }
         .node.end-of-word {
-            stroke: #e0ac2b;
+            /* This style is no longer used for regular nodes */
+            /* stroke: #e0ac2b; */
+            /* stroke-width: 3px; */
+        }
+        .node.sink-end-node {
+            fill: #ff7f0e; /* A distinct color for the sink node */
+            stroke: #e0ac2b; /* A border to emphasize it */
             stroke-width: 3px;
+            r: 12px; /* Slightly larger radius */
         }
         .link {
             stroke: #999;
             stroke-opacity: 0.6;
             stroke-width: 1px;
         }
-        .node-label, .link-label {
+        .link-label {
             font-size: 10px;
             fill: #333;
             pointer-events: none;
@@ -90,7 +97,6 @@
         const linkGroup = g.append("g").attr("class", "links");
         const nodeGroup = g.append("g").attr("class", "nodes");
         const linkLabelGroup = g.append("g").attr("class", "link-labels");
-        const nodeLabelGroup = g.append("g").attr("class", "node-labels");
         const hoverBox = d3.select("#hover-box");
 
         d3.json("../lattice_trie_graph.json").then(graph => {
@@ -101,10 +107,24 @@
                 rootNode.fy = height / 2;
             }
 
+            // Determine the maximum level to normalize y-positions
+            const maxLevel = d3.max(graph.nodes, d => d.level);
+            // Define a scaling factor for y-position based on level
+            const levelToY = d3.scaleLinear()
+                .domain([0, maxLevel])
+                .range([height * 0.1, height * 0.9]); // Map levels to a vertical range
+
             const simulation = d3.forceSimulation(graph.nodes)
                 .force("link", d3.forceLink(graph.links).id(d => d.id).distance(50))
                 .force("charge", d3.forceManyBody().strength(-300))
-                .force("center", d3.forceCenter(width / 2, height / 2)); // Center force still good for overall layout
+                .force("center", d3.forceCenter(width / 2, height / 2))
+                .force("y", d3.forceY(d => levelToY(d.level)).strength(0.5)); // Apply a strong Y-force based on level
+            // For root node, also apply an initial y position
+            graph.nodes.forEach(node => {
+                if (node.name === 'ROOT') {
+                    node.fy = levelToY(node.level);
+                }
+            });
 
             const link = linkGroup
                 .selectAll("line")
@@ -117,14 +137,20 @@
                 .data(graph.links)
                 .join("text")
                 .attr("class", "link-label")
-                .text(d => d.label);
+                .text(d => d.label === '<END>' ? '' : d.label);
 
             const node = nodeGroup
                 .selectAll("circle")
                 .data(graph.nodes)
                 .join("circle")
                 .attr("r", 10)
-                .attr("class", d => `node ${d.name === 'ROOT' ? 'root' : ''} ${d.isEndOfWord ? 'end-of-word' : ''}`)
+                .attr("class", d => {
+                    let classes = `node`;
+                    if (d.name === 'ROOT') classes += ' root';
+                    if (d.name === 'END') classes += ' sink-end-node'; // Apply new class for END node
+                    // No 'end-of-word' class for regular nodes anymore
+                    return classes;
+                })
                 .call(d3.drag()
                     .on("start", dragstarted)
                     .on("drag", dragged)
@@ -133,13 +159,6 @@
                 .on("mousemove", moveHoverBox)
                 .on("mouseout", hideHoverBox);
 
-            const nodeLabel = nodeLabelGroup
-                .selectAll("text")
-                .data(graph.nodes)
-                .join("text")
-                .attr("class", "node-label")
-                .attr("dy", -15)
-                .text(d => d.name);
 
             simulation.on("tick", () => {
                 link
@@ -156,9 +175,6 @@
                     .attr("cx", d => d.x)
                     .attr("cy", d => d.y);
 
-                nodeLabel
-                    .attr("x", d => d.x)
-                    .attr("y", d => d.y);
             });
 
             function dragstarted(event, d) {
@@ -181,16 +197,7 @@
             function showHoverBox(event, d) {
                 hoverBox.style("display", "block");
                 let content = `<h4>Node: "${d.name}"</h4>`;
-                content += `<p>Is End Of Word: ${d.isEndOfWord}</p>`;
-                if (d.suffixes && d.suffixes.length > 0) {
-                    content += `<p>Suffixes (from this node):</p><ul>`;
-                    d.suffixes.forEach(suffix => {
-                        content += `<li>${suffix}</li>`;
-                    });
-                    content += `</ul>`;
-                } else {
-                    content += `<p>No explicit suffixes from this node (or not an end of word).</p>`;
-                }
+                content += `<p>Level: ${d.level}</p>`;
                 hoverBox.html(content);
                 moveHoverBox(event);
             }

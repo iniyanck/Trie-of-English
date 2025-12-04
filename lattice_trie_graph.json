@@ -6,1105 +6,700 @@
             "isEndOfWord": false,
             "wordCount": 0,
             "wordsEndingHere": [],
-            "suffixes": []
+            "suffixes": [],
+            "level": 0
         },
         {
             "id": 1,
-            "name": "c",
+            "name": "t",
             "isEndOfWord": false,
-            "wordCount": 4,
+            "wordCount": 5,
             "wordsEndingHere": [],
-            "suffixes": []
+            "suffixes": [],
+            "level": 1
         },
         {
             "id": 2,
+            "name": "b",
+            "isEndOfWord": false,
+            "wordCount": 1,
+            "wordsEndingHere": [],
+            "suffixes": [],
+            "level": 1
+        },
+        {
+            "id": 3,
+            "name": "a",
+            "isEndOfWord": true,
+            "wordCount": 2,
+            "wordsEndingHere": [
+                "a"
+            ],
+            "suffixes": [
+                "a"
+            ],
+            "level": 1
+        },
+        {
+            "id": 16,
+            "name": "END",
+            "isEndOfWord": true,
+            "wordCount": 27,
+            "wordsEndingHere": [],
+            "suffixes": [],
+            "level": 6
+        },
+        {
+            "id": 4,
+            "name": "o",
+            "isEndOfWord": false,
+            "wordCount": 2,
+            "wordsEndingHere": [],
+            "suffixes": [],
+            "level": 1
+        },
+        {
+            "id": 5,
+            "name": "i",
+            "isEndOfWord": true,
+            "wordCount": 3,
+            "wordsEndingHere": [
+                "i"
+            ],
+            "suffixes": [
+                "i"
+            ],
+            "level": 1
+        },
+        {
+            "id": 6,
+            "name": "h",
+            "isEndOfWord": false,
+            "wordCount": 2,
+            "wordsEndingHere": [],
+            "suffixes": [],
+            "level": 1
+        },
+        {
+            "id": 7,
+            "name": "f",
+            "isEndOfWord": false,
+            "wordCount": 1,
+            "wordsEndingHere": [],
+            "suffixes": [],
+            "level": 1
+        },
+        {
+            "id": 8,
+            "name": "y",
+            "isEndOfWord": false,
+            "wordCount": 1,
+            "wordsEndingHere": [],
+            "suffixes": [],
+            "level": 1
+        },
+        {
+            "id": 9,
+            "name": "w",
+            "isEndOfWord": false,
+            "wordCount": 1,
+            "wordsEndingHere": [],
+            "suffixes": [],
+            "level": 1
+        },
+        {
+            "id": 10,
             "name": "d",
             "isEndOfWord": false,
             "wordCount": 1,
             "wordsEndingHere": [],
-            "suffixes": []
-        },
-        {
-            "id": 3,
-            "name": "s",
-            "isEndOfWord": false,
-            "wordCount": 5,
-            "wordsEndingHere": [],
-            "suffixes": []
-        },
-        {
-            "id": 4,
-            "name": "m",
-            "isEndOfWord": false,
-            "wordCount": 2,
-            "wordsEndingHere": [],
-            "suffixes": []
-        },
-        {
-            "id": 5,
-            "name": "t",
-            "isEndOfWord": false,
-            "wordCount": 2,
-            "wordsEndingHere": [],
-            "suffixes": []
-        },
-        {
-            "id": 6,
-            "name": "f",
-            "isEndOfWord": false,
-            "wordCount": 2,
-            "wordsEndingHere": [],
-            "suffixes": []
-        },
-        {
-            "id": 7,
-            "name": "r",
-            "isEndOfWord": false,
-            "wordCount": 1,
-            "wordsEndingHere": [],
-            "suffixes": []
-        },
-        {
-            "id": 8,
-            "name": "h",
-            "isEndOfWord": false,
-            "wordCount": 1,
-            "wordsEndingHere": [],
-            "suffixes": []
-        },
-        {
-            "id": 9,
-            "name": "b",
-            "isEndOfWord": false,
-            "wordCount": 1,
-            "wordsEndingHere": [],
-            "suffixes": []
-        },
-        {
-            "id": 10,
-            "name": "p",
-            "isEndOfWord": false,
-            "wordCount": 1,
-            "wordsEndingHere": [],
-            "suffixes": []
+            "suffixes": [],
+            "level": 1
         },
         {
             "id": 11,
-            "name": "l",
+            "name": "s",
             "isEndOfWord": false,
             "wordCount": 1,
             "wordsEndingHere": [],
-            "suffixes": []
+            "suffixes": [],
+            "level": 1
         },
         {
             "id": 12,
-            "name": "w",
+            "name": "h",
             "isEndOfWord": false,
-            "wordCount": 1,
+            "wordCount": 4,
             "wordsEndingHere": [],
-            "suffixes": []
+            "suffixes": [],
+            "level": 2
         },
         {
             "id": 13,
-            "name": "a",
-            "isEndOfWord": false,
+            "name": "o",
+            "isEndOfWord": true,
             "wordCount": 2,
-            "wordsEndingHere": [],
-            "suffixes": []
+            "wordsEndingHere": [
+                "to",
+                "do"
+            ],
+            "suffixes": [
+                "to",
+                "do"
+            ],
+            "level": 2
         },
         {
             "id": 14,
-            "name": "u",
-            "isEndOfWord": false,
-            "wordCount": 1,
-            "wordsEndingHere": [],
-            "suffixes": []
+            "name": "e",
+            "isEndOfWord": true,
+            "wordCount": 5,
+            "wordsEndingHere": [
+                "the",
+                "be",
+                "have",
+                "he"
+            ],
+            "suffixes": [
+                "the",
+                "be",
+                "have",
+                "he"
+            ],
+            "level": 4
         },
         {
             "id": 15,
-            "name": "h",
+            "name": "n",
             "isEndOfWord": false,
             "wordCount": 1,
             "wordsEndingHere": [],
-            "suffixes": []
-        },
-        {
-            "id": 16,
-            "name": "o",
-            "isEndOfWord": false,
-            "wordCount": 1,
-            "wordsEndingHere": [],
-            "suffixes": []
+            "suffixes": [],
+            "level": 2
         },
         {
             "id": 17,
-            "name": "u",
-            "isEndOfWord": false,
-            "wordCount": 3,
-            "wordsEndingHere": [],
-            "suffixes": []
+            "name": "f",
+            "isEndOfWord": true,
+            "wordCount": 1,
+            "wordsEndingHere": [
+                "of"
+            ],
+            "suffixes": [
+                "of"
+            ],
+            "level": 2
         },
         {
             "id": 18,
-            "name": "t",
-            "isEndOfWord": false,
-            "wordCount": 1,
-            "wordsEndingHere": [],
-            "suffixes": []
+            "name": "n",
+            "isEndOfWord": true,
+            "wordCount": 2,
+            "wordsEndingHere": [
+                "in",
+                "on"
+            ],
+            "suffixes": [
+                "in",
+                "on"
+            ],
+            "level": 2
         },
         {
             "id": 19,
-            "name": "k",
-            "isEndOfWord": false,
-            "wordCount": 1,
-            "wordsEndingHere": [],
-            "suffixes": []
-        },
-        {
-            "id": 20,
-            "name": "o",
-            "isEndOfWord": false,
-            "wordCount": 2,
-            "wordsEndingHere": [],
-            "suffixes": []
-        },
-        {
-            "id": 21,
-            "name": "r",
-            "isEndOfWord": false,
-            "wordCount": 1,
-            "wordsEndingHere": [],
-            "suffixes": []
-        },
-        {
-            "id": 22,
-            "name": "a",
-            "isEndOfWord": false,
-            "wordCount": 1,
-            "wordsEndingHere": [],
-            "suffixes": []
-        },
-        {
-            "id": 23,
-            "name": "l",
-            "isEndOfWord": false,
-            "wordCount": 1,
-            "wordsEndingHere": [],
-            "suffixes": []
-        },
-        {
-            "id": 24,
-            "name": "i",
-            "isEndOfWord": false,
-            "wordCount": 1,
-            "wordsEndingHere": [],
-            "suffixes": []
-        },
-        {
-            "id": 25,
-            "name": "i",
-            "isEndOfWord": false,
-            "wordCount": 1,
-            "wordsEndingHere": [],
-            "suffixes": []
-        },
-        {
-            "id": 26,
-            "name": "o",
-            "isEndOfWord": false,
-            "wordCount": 1,
-            "wordsEndingHere": [],
-            "suffixes": []
-        },
-        {
-            "id": 27,
-            "name": "o",
-            "isEndOfWord": false,
-            "wordCount": 1,
-            "wordsEndingHere": [],
-            "suffixes": []
-        },
-        {
-            "id": 28,
-            "name": "e",
-            "isEndOfWord": false,
-            "wordCount": 1,
-            "wordsEndingHere": [],
-            "suffixes": []
-        },
-        {
-            "id": 29,
-            "name": "i",
-            "isEndOfWord": false,
-            "wordCount": 1,
-            "wordsEndingHere": [],
-            "suffixes": []
-        },
-        {
-            "id": 30,
-            "name": "a",
-            "isEndOfWord": false,
-            "wordCount": 1,
-            "wordsEndingHere": [],
-            "suffixes": []
-        },
-        {
-            "id": 31,
             "name": "t",
             "isEndOfWord": true,
             "wordCount": 2,
             "wordsEndingHere": [
-                "cat",
-                "light"
+                "it",
+                "that"
             ],
             "suffixes": [
-                "cat",
-                "light"
-            ]
-        },
-        {
-            "id": 32,
-            "name": "r",
-            "isEndOfWord": true,
-            "wordCount": 6,
-            "wordsEndingHere": [
-                "star",
-                "flower",
-                "river",
-                "car",
-                "chair",
-                "water"
+                "it",
+                "that"
             ],
-            "suffixes": [
-                "star",
-                "flower",
-                "river",
-                "car",
-                "chair",
-                "water"
-            ]
+            "level": 4
         },
         {
-            "id": 33,
-            "name": "p",
-            "isEndOfWord": true,
-            "wordCount": 1,
-            "wordsEndingHere": [
-                "cup"
-            ],
-            "suffixes": [
-                "cup"
-            ]
-        },
-        {
-            "id": 34,
+            "id": 20,
             "name": "a",
             "isEndOfWord": false,
             "wordCount": 1,
             "wordsEndingHere": [],
-            "suffixes": []
+            "suffixes": [],
+            "level": 2
         },
         {
-            "id": 35,
-            "name": "g",
-            "isEndOfWord": true,
-            "wordCount": 1,
-            "wordsEndingHere": [
-                "dog"
-            ],
-            "suffixes": [
-                "dog"
-            ]
-        },
-        {
-            "id": 36,
-            "name": "n",
-            "isEndOfWord": true,
-            "wordCount": 6,
-            "wordsEndingHere": [
-                "sun",
-                "moon",
-                "mountain",
-                "pen",
-                "superman",
-                "superwoman"
-            ],
-            "suffixes": [
-                "sun",
-                "moon",
-                "mountain",
-                "pen",
-                "superman",
-                "superwoman"
-            ]
-        },
-        {
-            "id": 37,
-            "name": "p",
+            "id": 21,
+            "name": "o",
             "isEndOfWord": false,
-            "wordCount": 2,
+            "wordCount": 1,
             "wordsEndingHere": [],
-            "suffixes": []
+            "suffixes": [],
+            "level": 2
         },
         {
-            "id": 38,
+            "id": 22,
+            "name": "o",
+            "isEndOfWord": false,
+            "wordCount": 1,
+            "wordsEndingHere": [],
+            "suffixes": [],
+            "level": 2
+        },
+        {
+            "id": 23,
+            "name": "i",
+            "isEndOfWord": false,
+            "wordCount": 1,
+            "wordsEndingHere": [],
+            "suffixes": [],
+            "level": 2
+        },
+        {
+            "id": 24,
             "name": "a",
             "isEndOfWord": false,
             "wordCount": 1,
             "wordsEndingHere": [],
-            "suffixes": []
+            "suffixes": [],
+            "level": 2
         },
         {
-            "id": 39,
+            "id": 25,
+            "name": "a",
+            "isEndOfWord": false,
+            "wordCount": 1,
+            "wordsEndingHere": [],
+            "suffixes": [],
+            "level": 3
+        },
+        {
+            "id": 26,
+            "name": "i",
+            "isEndOfWord": false,
+            "wordCount": 1,
+            "wordsEndingHere": [],
+            "suffixes": [],
+            "level": 3
+        },
+        {
+            "id": 27,
             "name": "y",
             "isEndOfWord": true,
-            "wordCount": 1,
+            "wordCount": 2,
             "wordsEndingHere": [
-                "sky"
+                "say",
+                "they"
             ],
             "suffixes": [
-                "sky"
-            ]
+                "say",
+                "they"
+            ],
+            "level": 5
         },
         {
-            "id": 40,
-            "name": "o",
-            "isEndOfWord": false,
+            "id": 28,
+            "name": "d",
+            "isEndOfWord": true,
             "wordCount": 1,
-            "wordsEndingHere": [],
-            "suffixes": []
+            "wordsEndingHere": [
+                "and"
+            ],
+            "suffixes": [
+                "and"
+            ],
+            "level": 3
         },
         {
-            "id": 41,
-            "name": "u",
-            "isEndOfWord": false,
-            "wordCount": 1,
-            "wordsEndingHere": [],
-            "suffixes": []
-        },
-        {
-            "id": 42,
-            "name": "e",
-            "isEndOfWord": false,
-            "wordCount": 1,
-            "wordsEndingHere": [],
-            "suffixes": []
-        },
-        {
-            "id": 43,
-            "name": "b",
-            "isEndOfWord": false,
-            "wordCount": 1,
-            "wordsEndingHere": [],
-            "suffixes": []
-        },
-        {
-            "id": 44,
-            "name": "o",
-            "isEndOfWord": false,
-            "wordCount": 1,
-            "wordsEndingHere": [],
-            "suffixes": []
-        },
-        {
-            "id": 45,
-            "name": "r",
-            "isEndOfWord": false,
-            "wordCount": 1,
-            "wordsEndingHere": [],
-            "suffixes": []
-        },
-        {
-            "id": 46,
+            "id": 29,
             "name": "v",
             "isEndOfWord": false,
             "wordCount": 1,
             "wordsEndingHere": [],
-            "suffixes": []
+            "suffixes": [],
+            "level": 3
         },
         {
-            "id": 47,
-            "name": "u",
-            "isEndOfWord": false,
-            "wordCount": 1,
-            "wordsEndingHere": [],
-            "suffixes": []
-        },
-        {
-            "id": 48,
-            "name": "o",
-            "isEndOfWord": false,
-            "wordCount": 1,
-            "wordsEndingHere": [],
-            "suffixes": []
-        },
-        {
-            "id": 49,
-            "name": "g",
-            "isEndOfWord": false,
-            "wordCount": 1,
-            "wordsEndingHere": [],
-            "suffixes": []
-        },
-        {
-            "id": 50,
-            "name": "t",
-            "isEndOfWord": false,
-            "wordCount": 1,
-            "wordsEndingHere": [],
-            "suffixes": []
-        },
-        {
-            "id": 51,
-            "name": "i",
-            "isEndOfWord": false,
-            "wordCount": 1,
-            "wordsEndingHere": [],
-            "suffixes": []
-        },
-        {
-            "id": 52,
-            "name": "e",
-            "isEndOfWord": false,
-            "wordCount": 2,
-            "wordsEndingHere": [],
-            "suffixes": []
-        },
-        {
-            "id": 53,
-            "name": "n",
-            "isEndOfWord": false,
-            "wordCount": 1,
-            "wordsEndingHere": [],
-            "suffixes": []
-        },
-        {
-            "id": 54,
-            "name": "e",
-            "isEndOfWord": true,
-            "wordCount": 4,
-            "wordsEndingHere": [
-                "tree",
-                "house",
-                "table",
-                "fire"
-            ],
-            "suffixes": [
-                "tree",
-                "house",
-                "table",
-                "fire"
-            ]
-        },
-        {
-            "id": 55,
-            "name": "l",
-            "isEndOfWord": false,
-            "wordCount": 1,
-            "wordsEndingHere": [],
-            "suffixes": []
-        },
-        {
-            "id": 56,
-            "name": "w",
-            "isEndOfWord": false,
-            "wordCount": 1,
-            "wordsEndingHere": [],
-            "suffixes": []
-        },
-        {
-            "id": 57,
-            "name": "e",
-            "isEndOfWord": false,
-            "wordCount": 3,
-            "wordsEndingHere": [],
-            "suffixes": []
-        },
-        {
-            "id": 58,
-            "name": "s",
-            "isEndOfWord": false,
-            "wordCount": 1,
-            "wordsEndingHere": [],
-            "suffixes": []
-        },
-        {
-            "id": 59,
-            "name": "k",
-            "isEndOfWord": true,
-            "wordCount": 1,
-            "wordsEndingHere": [
-                "book"
-            ],
-            "suffixes": [
-                "book"
-            ]
-        },
-        {
-            "id": 60,
-            "name": "h",
-            "isEndOfWord": false,
-            "wordCount": 1,
-            "wordsEndingHere": [],
-            "suffixes": []
-        },
-        {
-            "id": 61,
+            "id": 30,
             "name": "r",
-            "isEndOfWord": false,
-            "wordCount": 2,
-            "wordsEndingHere": [],
-            "suffixes": []
+            "isEndOfWord": true,
+            "wordCount": 1,
+            "wordsEndingHere": [
+                "for"
+            ],
+            "suffixes": [
+                "for"
+            ],
+            "level": 3
         },
         {
-            "id": 62,
+            "id": 31,
+            "name": "u",
+            "isEndOfWord": true,
+            "wordCount": 1,
+            "wordsEndingHere": [
+                "you"
+            ],
+            "suffixes": [
+                "you"
+            ],
+            "level": 3
+        },
+        {
+            "id": 32,
             "name": "t",
             "isEndOfWord": false,
             "wordCount": 1,
             "wordsEndingHere": [],
-            "suffixes": []
+            "suffixes": [],
+            "level": 3
         },
         {
-            "id": 63,
-            "name": "m",
-            "isEndOfWord": false,
-            "wordCount": 2,
-            "wordsEndingHere": [],
-            "suffixes": []
-        },
-        {
-            "id": 64,
-            "name": "w",
-            "isEndOfWord": false,
+            "id": 33,
+            "name": "s",
+            "isEndOfWord": true,
             "wordCount": 1,
-            "wordsEndingHere": [],
-            "suffixes": []
+            "wordsEndingHere": [
+                "this"
+            ],
+            "suffixes": [
+                "this"
+            ],
+            "level": 4
         },
         {
-            "id": 65,
-            "name": "a",
-            "isEndOfWord": false,
+            "id": 34,
+            "name": "h",
+            "isEndOfWord": true,
             "wordCount": 1,
-            "wordsEndingHere": [],
-            "suffixes": []
-        },
-        {
-            "id": 66,
-            "name": "a",
-            "isEndOfWord": false,
-            "wordCount": 2,
-            "wordsEndingHere": [],
-            "suffixes": []
-        },
-        {
-            "id": 67,
-            "name": "o",
-            "isEndOfWord": false,
-            "wordCount": 1,
-            "wordsEndingHere": [],
-            "suffixes": []
-        },
-        {
-            "id": 68,
-            "name": "i",
-            "isEndOfWord": false,
-            "wordCount": 1,
-            "wordsEndingHere": [],
-            "suffixes": []
+            "wordsEndingHere": [
+                "with"
+            ],
+            "suffixes": [
+                "with"
+            ],
+            "level": 4
         }
     ],
     "links": [
         {
             "source": 0,
             "target": 1,
-            "label": "c",
+            "label": "t",
             "type": "prefix"
         },
         {
             "source": 0,
             "target": 2,
-            "label": "d",
+            "label": "b",
             "type": "prefix"
         },
         {
             "source": 0,
             "target": 3,
-            "label": "s",
+            "label": "a",
             "type": "prefix"
         },
         {
             "source": 0,
             "target": 4,
-            "label": "m",
+            "label": "o",
             "type": "prefix"
         },
         {
             "source": 0,
             "target": 5,
-            "label": "t",
+            "label": "i",
             "type": "prefix"
         },
         {
             "source": 0,
             "target": 6,
-            "label": "f",
+            "label": "h",
             "type": "prefix"
         },
         {
             "source": 0,
             "target": 7,
-            "label": "r",
+            "label": "f",
             "type": "prefix"
         },
         {
             "source": 0,
             "target": 8,
-            "label": "h",
+            "label": "y",
             "type": "prefix"
         },
         {
             "source": 0,
             "target": 9,
-            "label": "b",
+            "label": "w",
             "type": "prefix"
         },
         {
             "source": 0,
             "target": 10,
-            "label": "p",
+            "label": "d",
             "type": "prefix"
         },
         {
             "source": 0,
             "target": 11,
-            "label": "l",
+            "label": "s",
             "type": "prefix"
         },
         {
-            "source": 0,
+            "source": 1,
             "target": 12,
-            "label": "w",
+            "label": "h",
             "type": "prefix"
         },
         {
             "source": 1,
             "target": 13,
-            "label": "a",
-            "type": "prefix"
-        },
-        {
-            "source": 1,
-            "target": 14,
-            "label": "u",
-            "type": "prefix"
-        },
-        {
-            "source": 1,
-            "target": 15,
-            "label": "h",
+            "label": "o",
             "type": "prefix"
         },
         {
             "source": 2,
+            "target": 14,
+            "label": "e",
+            "type": "prefix"
+        },
+        {
+            "source": 3,
+            "target": 15,
+            "label": "n",
+            "type": "prefix"
+        },
+        {
+            "source": 3,
             "target": 16,
-            "label": "o",
-            "type": "prefix"
+            "label": "<END>",
+            "type": "ends_word"
         },
         {
-            "source": 3,
+            "source": 4,
             "target": 17,
-            "label": "u",
-            "type": "prefix"
-        },
-        {
-            "source": 3,
-            "target": 18,
-            "label": "t",
-            "type": "prefix"
-        },
-        {
-            "source": 3,
-            "target": 19,
-            "label": "k",
+            "label": "f",
             "type": "prefix"
         },
         {
             "source": 4,
+            "target": 18,
+            "label": "n",
+            "type": "prefix"
+        },
+        {
+            "source": 5,
+            "target": 18,
+            "label": "n",
+            "type": "prefix"
+        },
+        {
+            "source": 5,
+            "target": 19,
+            "label": "t",
+            "type": "prefix"
+        },
+        {
+            "source": 5,
+            "target": 16,
+            "label": "<END>",
+            "type": "ends_word"
+        },
+        {
+            "source": 6,
             "target": 20,
-            "label": "o",
-            "type": "prefix"
-        },
-        {
-            "source": 5,
-            "target": 21,
-            "label": "r",
-            "type": "prefix"
-        },
-        {
-            "source": 5,
-            "target": 22,
             "label": "a",
             "type": "prefix"
         },
         {
             "source": 6,
-            "target": 23,
-            "label": "l",
-            "type": "prefix"
-        },
-        {
-            "source": 6,
-            "target": 24,
-            "label": "i",
+            "target": 14,
+            "label": "e",
             "type": "prefix"
         },
         {
             "source": 7,
-            "target": 25,
-            "label": "i",
+            "target": 21,
+            "label": "o",
             "type": "prefix"
         },
         {
             "source": 8,
-            "target": 26,
+            "target": 22,
             "label": "o",
             "type": "prefix"
         },
         {
             "source": 9,
-            "target": 27,
-            "label": "o",
+            "target": 23,
+            "label": "i",
             "type": "prefix"
         },
         {
             "source": 10,
-            "target": 28,
-            "label": "e",
+            "target": 13,
+            "label": "o",
             "type": "prefix"
         },
         {
             "source": 11,
-            "target": 29,
-            "label": "i",
+            "target": 24,
+            "label": "a",
             "type": "prefix"
         },
         {
             "source": 12,
-            "target": 30,
+            "target": 14,
+            "label": "e",
+            "type": "prefix"
+        },
+        {
+            "source": 12,
+            "target": 25,
             "label": "a",
             "type": "prefix"
         },
         {
-            "source": 13,
-            "target": 31,
-            "label": "t",
+            "source": 12,
+            "target": 26,
+            "label": "i",
             "type": "prefix"
         },
         {
             "source": 13,
-            "target": 32,
-            "label": "r",
-            "type": "prefix"
+            "target": 16,
+            "label": "<END>",
+            "type": "ends_word"
         },
         {
             "source": 14,
-            "target": 33,
-            "label": "p",
-            "type": "prefix"
+            "target": 16,
+            "label": "<END>",
+            "type": "ends_word"
         },
         {
-            "source": 15,
-            "target": 34,
-            "label": "a",
-            "type": "prefix"
-        },
-        {
-            "source": 16,
-            "target": 35,
-            "label": "g",
-            "type": "prefix"
-        },
-        {
-            "source": 17,
-            "target": 36,
-            "label": "n",
-            "type": "prefix"
-        },
-        {
-            "source": 17,
-            "target": 37,
-            "label": "p",
-            "type": "prefix"
-        },
-        {
-            "source": 18,
-            "target": 38,
-            "label": "a",
-            "type": "prefix"
-        },
-        {
-            "source": 19,
-            "target": 39,
+            "source": 14,
+            "target": 27,
             "label": "y",
             "type": "prefix"
         },
         {
-            "source": 20,
-            "target": 40,
-            "label": "o",
+            "source": 15,
+            "target": 28,
+            "label": "d",
             "type": "prefix"
+        },
+        {
+            "source": 17,
+            "target": 16,
+            "label": "<END>",
+            "type": "ends_word"
+        },
+        {
+            "source": 18,
+            "target": 16,
+            "label": "<END>",
+            "type": "ends_word"
+        },
+        {
+            "source": 19,
+            "target": 16,
+            "label": "<END>",
+            "type": "ends_word"
         },
         {
             "source": 20,
-            "target": 41,
-            "label": "u",
-            "type": "prefix"
-        },
-        {
-            "source": 21,
-            "target": 42,
-            "label": "e",
-            "type": "prefix"
-        },
-        {
-            "source": 22,
-            "target": 43,
-            "label": "b",
-            "type": "prefix"
-        },
-        {
-            "source": 23,
-            "target": 44,
-            "label": "o",
-            "type": "prefix"
-        },
-        {
-            "source": 24,
-            "target": 45,
-            "label": "r",
-            "type": "prefix"
-        },
-        {
-            "source": 25,
-            "target": 46,
+            "target": 29,
             "label": "v",
             "type": "prefix"
         },
         {
-            "source": 26,
-            "target": 47,
+            "source": 21,
+            "target": 30,
+            "label": "r",
+            "type": "prefix"
+        },
+        {
+            "source": 22,
+            "target": 31,
             "label": "u",
             "type": "prefix"
         },
         {
-            "source": 27,
-            "target": 48,
-            "label": "o",
-            "type": "prefix"
-        },
-        {
-            "source": 28,
-            "target": 36,
-            "label": "n",
-            "type": "prefix"
-        },
-        {
-            "source": 29,
-            "target": 49,
-            "label": "g",
-            "type": "prefix"
-        },
-        {
-            "source": 30,
-            "target": 50,
+            "source": 23,
+            "target": 32,
             "label": "t",
             "type": "prefix"
         },
         {
-            "source": 34,
-            "target": 51,
-            "label": "i",
+            "source": 24,
+            "target": 27,
+            "label": "y",
             "type": "prefix"
         },
         {
-            "source": 37,
-            "target": 52,
-            "label": "e",
+            "source": 25,
+            "target": 19,
+            "label": "t",
             "type": "prefix"
         },
         {
-            "source": 38,
-            "target": 32,
-            "label": "r",
-            "type": "prefix"
-        },
-        {
-            "source": 40,
-            "target": 36,
-            "label": "n",
-            "type": "prefix"
-        },
-        {
-            "source": 41,
-            "target": 53,
-            "label": "n",
-            "type": "prefix"
-        },
-        {
-            "source": 42,
-            "target": 54,
-            "label": "e",
-            "type": "prefix"
-        },
-        {
-            "source": 43,
-            "target": 55,
-            "label": "l",
-            "type": "prefix"
-        },
-        {
-            "source": 44,
-            "target": 56,
-            "label": "w",
-            "type": "prefix"
-        },
-        {
-            "source": 45,
-            "target": 54,
-            "label": "e",
-            "type": "prefix"
-        },
-        {
-            "source": 46,
-            "target": 57,
-            "label": "e",
-            "type": "prefix"
-        },
-        {
-            "source": 47,
-            "target": 58,
+            "source": 26,
+            "target": 33,
             "label": "s",
             "type": "prefix"
         },
         {
-            "source": 48,
-            "target": 59,
-            "label": "k",
+            "source": 27,
+            "target": 16,
+            "label": "<END>",
+            "type": "ends_word"
+        },
+        {
+            "source": 28,
+            "target": 16,
+            "label": "<END>",
+            "type": "ends_word"
+        },
+        {
+            "source": 29,
+            "target": 14,
+            "label": "e",
             "type": "prefix"
         },
         {
-            "source": 49,
-            "target": 60,
+            "source": 30,
+            "target": 16,
+            "label": "<END>",
+            "type": "ends_word"
+        },
+        {
+            "source": 31,
+            "target": 16,
+            "label": "<END>",
+            "type": "ends_word"
+        },
+        {
+            "source": 32,
+            "target": 34,
             "label": "h",
             "type": "prefix"
         },
         {
-            "source": 50,
-            "target": 57,
-            "label": "e",
-            "type": "prefix"
+            "source": 33,
+            "target": 16,
+            "label": "<END>",
+            "type": "ends_word"
         },
         {
-            "source": 51,
-            "target": 32,
-            "label": "r",
-            "type": "prefix"
-        },
-        {
-            "source": 52,
-            "target": 61,
-            "label": "r",
-            "type": "prefix"
-        },
-        {
-            "source": 53,
-            "target": 62,
-            "label": "t",
-            "type": "prefix"
-        },
-        {
-            "source": 55,
-            "target": 54,
-            "label": "e",
-            "type": "prefix"
-        },
-        {
-            "source": 56,
-            "target": 57,
-            "label": "e",
-            "type": "prefix"
-        },
-        {
-            "source": 57,
-            "target": 32,
-            "label": "r",
-            "type": "prefix"
-        },
-        {
-            "source": 58,
-            "target": 54,
-            "label": "e",
-            "type": "prefix"
-        },
-        {
-            "source": 60,
-            "target": 31,
-            "label": "t",
-            "type": "prefix"
-        },
-        {
-            "source": 61,
-            "target": 63,
-            "label": "m",
-            "type": "prefix"
-        },
-        {
-            "source": 61,
-            "target": 64,
-            "label": "w",
-            "type": "prefix"
-        },
-        {
-            "source": 62,
-            "target": 65,
-            "label": "a",
-            "type": "prefix"
-        },
-        {
-            "source": 63,
-            "target": 66,
-            "label": "a",
-            "type": "prefix"
-        },
-        {
-            "source": 64,
-            "target": 67,
-            "label": "o",
-            "type": "prefix"
-        },
-        {
-            "source": 65,
-            "target": 68,
-            "label": "i",
-            "type": "prefix"
-        },
-        {
-            "source": 66,
-            "target": 36,
-            "label": "n",
-            "type": "prefix"
-        },
-        {
-            "source": 67,
-            "target": 63,
-            "label": "m",
-            "type": "prefix"
-        },
-        {
-            "source": 68,
-            "target": 36,
-            "label": "n",
-            "type": "prefix"
+            "source": 34,
+            "target": 16,
+            "label": "<END>",
+            "type": "ends_word"
         }
     ]
 }
