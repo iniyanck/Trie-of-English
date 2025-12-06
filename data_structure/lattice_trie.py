@@ -117,96 +117,42 @@ class LatticeTrie:
 
     def _assign_levels(self):
         """
-        Assigns levels to nodes in the Trie using a breadth-first traversal.
-        The level of a node is max(parent_level) + 1.
+        Assigns levels to nodes in the Trie, where the level of a node is
+        the length of the longest path from the root to that node.
+        This is achieved using a single-pass topological sort-like BFS.
         """
-        queue = [(self.root, 0)]
-        # Use a dictionary to keep track of the maximum level reached for each node,
-        # as a node might be reached from multiple paths (due to DAWG-like merging).
-        # Initialize all node levels to 0 and then update.
-        for node in self.nodes:
-            node.level = 0
-        self.root.level = 0 # Root is level 0
-
-        processed_for_level = set()
-
-        while queue:
-            current_node, current_level = queue.pop(0)
-
-            # Only update level if current_level is greater than the already assigned level
-            # This handles cases where a node is reached by multiple paths
-            if current_level > current_node.level:
-                current_node.level = current_level
-            
-            # Add to processed set once its level is finalized for this iteration
-            # (though it might be updated again if a higher path is found later)
-            processed_for_level.add(current_node)
-
-            for child_node in current_node.children.values():
-                # Enqueue if the child's potential new level is higher than its current level
-                # Or if it hasn't been processed yet.
-                if current_node.level + 1 > child_node.level or child_node not in processed_for_level:
-                    queue.append((child_node, current_node.level + 1))
-        
-        # A second pass or a more robust BFS might be needed to ensure "greatest of two prefixes".
-        # The above BFS might not guarantee the max if a shorter path is processed first.
-        # Let's refine this with a proper Bellman-Ford-like approach or iterative BFS for max levels.
-
-        # Re-initialize levels for a robust level assignment
+        # Re-initialize levels for a robust level assignment.
         for node in self.nodes:
             node.level = -1 # Use -1 to indicate unvisited, or that level calculation is pending
         self.root.level = 0
         
-        # This will store nodes to process, ensuring we process all paths.
-        # queue elements will be (node, potential_level)
-        queue = [(self.root, 0)]
+        # Calculate in-degrees for all nodes to support a topological sort-like processing.
+        # This ensures that a node is processed only after all its parent nodes have their final levels.
+        in_degree = {node: 0 for node in self.nodes}
+        for node in self.nodes:
+            for child_node in node.children.values():
+                in_degree[child_node] += 1
+
+        # Initialize a queue with nodes having an in-degree of 0 (typically just the root).
+        queue = [node for node, degree in in_degree.items() if degree == 0]
         
-        # Keep track of nodes whose levels might still need updates, and a visited set for BFS structure.
-        nodes_in_queue = {self.root} # Keep track of nodes currently in queue to avoid duplicates
-        
-        # Standard BFS for initial levels
-        print(f"DEBUG: Starting initial BFS for level assignment. Total nodes: {len(self.nodes)}")
+        processed_count = 0
+
         while queue:
-            current_node, current_level = queue.pop(0)
-            nodes_in_queue.discard(current_node) # Remove from in-queue set
+            current_node = queue.pop(0)
+            processed_count += 1
 
-            # If we found a higher level for this node, update it
-            if current_level > current_node.level:
-                current_node.level = current_level
-            
             for child_node in current_node.children.values():
-                # If a path through current_node results in a higher level for child_node
-                if current_node.level + 1 > child_node.level:
+                # Update child node's level if a longer path is found through the current_node.
+                if current_node.level != -1 and current_node.level + 1 > child_node.level:
                     child_node.level = current_node.level + 1
-                    # Add to queue only if it's not already in the queue to avoid redundant processing
-                    if child_node not in nodes_in_queue:
-                        queue.append((child_node, child_node.level))
-                        nodes_in_queue.add(child_node)
-
-        # After the initial BFS, perform a few more passes to propagate max levels
-        # This is essentially relaxing edges repeatedly, similar to Bellman-Ford for longest path
-        # since cycles are not present (it's a DAG). Max iterations = max path length.
-        # In a trie, max path length is max word length.
-        max_word_length = max(len(word) for word in self.words) if hasattr(self, 'words') and self.words else 50 # Heuristic max word length
-        print(f"DEBUG: Max word length: {max_word_length}. Starting {max_word_length + 1} additional passes.")
-
-        for i in range(max_word_length + 1): # Max path length + 1 iterations
-            updated_in_pass = False
-            for node in list(self.nodes): # Iterate over a copy as self.nodes might change
-                for char_key, child_node in node.children.items():
-                    # If this is the special link to the end_node, handle it
-                    if child_node is self.end_node:
-                        # The end_node's level should be the max of all its incoming parents + 1
-                        if node.level != -1 and node.level + 1 > self.end_node.level:
-                            self.end_node.level = node.level + 1
-                            updated_in_pass = True
-                    elif node.level != -1 and node.level + 1 > child_node.level:
-                        child_node.level = node.level + 1
-                        updated_in_pass = True
-            # print(f"DEBUG: Pass {i+1}/{max_word_length + 1} completed. Updated: {updated_in_pass}")
-            if not updated_in_pass:
-                print(f"DEBUG: Levels stable after {i+1} passes.")
-                break # No levels were updated, so we've reached a stable state
+                
+                # Decrement in-degree and add the child to the queue if all its parents have been processed.
+                in_degree[child_node] -= 1
+                if in_degree[child_node] == 0:
+                    queue.append(child_node)
+        
+        print(f"DEBUG: Levels assigned using a single-pass topological sort-like BFS. Processed {processed_count} nodes.")
 
     def visualize(self, max_nodes=500):
         nodes_data = []

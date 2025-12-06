@@ -14,7 +14,8 @@
             fill: #69b3a2;
             stroke: #fff;
             stroke-width: 1.5px;
-            cursor: grab;
+            cursor: pointer; /* Change cursor from grab to pointer */
+            transition: fill 0.3s ease, stroke 0.3s ease, stroke-width 0.3s ease, r 0.3s ease, opacity 0.3s ease; /* Add transition */
         }
         .node.root {
             fill: #c6dbef;
@@ -34,12 +35,24 @@
             stroke: #999;
             stroke-opacity: 0.6;
             stroke-width: 1px;
+            transition: stroke 0.3s ease, stroke-opacity 0.3s ease, stroke-width 0.3s ease; /* Add transition */
+        }
+        .node-label {
+            font-size: 12px; /* Increased font size for better readability */
+            fill: #444; /* A slightly softer, more suitable color */
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* A more common and suitable font family */
+            pointer-events: none;
+            user-select: none;
+            text-anchor: middle; /* Center the text horizontally */
+            transition: fill 0.3s ease, opacity 0.3s ease;
         }
         .link-label {
+            /* No longer needed, but keeping for now as a placeholder for potential future use or debugging */
             font-size: 10px;
             fill: #333;
             pointer-events: none;
             user-select: none;
+            transition: fill 0.3s ease, opacity 0.3s ease; /* Add transition for labels */
         }
         .hover-box {
             position: absolute;
@@ -51,7 +64,13 @@
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             max-width: 300px;
             z-index: 100;
-            display: none; /* Hidden by default */
+            opacity: 0; /* Start with opacity 0 for transition */
+            visibility: hidden; /* Hidden by default */
+            transition: opacity 0.2s ease-in-out, visibility 0.2s ease-in-out; /* Add transition */
+        }
+        .hover-box.active {
+            opacity: 1;
+            visibility: visible;
         }
         .hover-box h4 {
             margin-top: 0;
@@ -72,6 +91,53 @@
             font-size: 11px;
             color: #666;
             line-height: 1.4;
+        }
+        .node.highlighted {
+            stroke: #e0ac2b;
+            stroke-width: 3px;
+            r: 12px;
+        }
+        .node.ancestor {
+            fill: #a1d99b; /* A lighter green for ancestors */
+            stroke: #74c476;
+            stroke-width: 2px;
+        }
+        .node.descendant {
+            fill: #9ecae1; /* A lighter blue for descendants */
+            stroke: #6baed6;
+            stroke-width: 2px;
+        }
+        .link.highlighted-path {
+            stroke: #e0ac2b;
+            stroke-width: 2.5px;
+            stroke-opacity: 1;
+        }
+        .link.ancestor-link {
+            stroke: #74c476;
+            stroke-width: 2px;
+            stroke-opacity: 1;
+        }
+        .link.descendant-link {
+            stroke: #6baed6;
+            stroke-width: 2px;
+            stroke-opacity: 1;
+        }
+        .node.dimmed {
+            fill: #ccc;
+            stroke: #eee;
+            opacity: 0.3;
+        }
+        .link.dimmed {
+            stroke: #ccc;
+            stroke-opacity: 0.1;
+        }
+        .node-label.dimmed {
+            opacity: 0; /* Make node labels completely dim when dimmed */
+            pointer-events: none; /* Disable interaction with dimmed node labels */
+        }
+        .link-label.dimmed {
+            opacity: 0; /* Make link labels disappear */
+            pointer-events: none; /* Disable interaction with dimmed link labels */
         }
     </style>
     <script src="https://d3js.org/d3.v7.min.js"></script>
@@ -96,12 +162,18 @@
 
         const linkGroup = g.append("g").attr("class", "links");
         const nodeGroup = g.append("g").attr("class", "nodes");
-        const linkLabelGroup = g.append("g").attr("class", "link-labels");
+        // Removed linkLabelGroup as labels are now on nodes
         const hoverBox = d3.select("#hover-box");
 
+        let graphNodes = [];
+        let graphLinks = [];
+
         d3.json("../lattice_trie_graph.json").then(graph => {
+            graphNodes = graph.nodes;
+            graphLinks = graph.links;
+
             // Find the root node and fix its position
-            const rootNode = graph.nodes.find(d => d.name === 'ROOT');
+            const rootNode = graphNodes.find(d => d.name === 'ROOT');
             if (rootNode) {
                 rootNode.fx = width / 2;
                 rootNode.fy = height / 2;
@@ -115,14 +187,18 @@
                 .range([height * 0.1, height * 0.9]); // Map levels to a vertical range
 
             const simulation = d3.forceSimulation(graph.nodes)
-                .force("link", d3.forceLink(graph.links).id(d => d.id).distance(50))
-                .force("charge", d3.forceManyBody().strength(-300))
+                .force("link", d3.forceLink(graph.links).id(d => d.id).distance(70)) // Increased link distance for better spacing
+                .force("charge", d3.forceManyBody().strength(-100)) // Reduced repulsion strength
                 .force("center", d3.forceCenter(width / 2, height / 2))
-                .force("y", d3.forceY(d => levelToY(d.level)).strength(0.5)); // Apply a strong Y-force based on level
+                .force("x", d3.forceX(width / 2).strength(0.1)) // Gentle pull towards the horizontal center
+                .force("y", d3.forceY(d => levelToY(d.level)).strength(1)) // Strong Y-force based on level
+                .force("collide", d3.forceCollide().radius(d => 15)); // Prevent nodes from overlapping
             // For root node, also apply an initial y position
             graph.nodes.forEach(node => {
                 if (node.name === 'ROOT') {
                     node.fy = levelToY(node.level);
+                } else {
+                    node.fy = levelToY(node.level); // Fix y-position for all nodes based on level
                 }
             });
 
@@ -132,13 +208,6 @@
                 .join("line")
                 .attr("class", "link");
 
-            const linkLabel = linkLabelGroup
-                .selectAll("text")
-                .data(graph.links)
-                .join("text")
-                .attr("class", "link-label")
-                .text(d => d.label === '<END>' ? '' : d.label);
-
             const node = nodeGroup
                 .selectAll("circle")
                 .data(graph.nodes)
@@ -147,17 +216,25 @@
                 .attr("class", d => {
                     let classes = `node`;
                     if (d.name === 'ROOT') classes += ' root';
-                    if (d.name === 'END') classes += ' sink-end-node'; // Apply new class for END node
-                    // No 'end-of-word' class for regular nodes anymore
+                    if (d.name === 'END') classes += ' sink-end-node';
                     return classes;
                 })
-                .call(d3.drag()
-                    .on("start", dragstarted)
-                    .on("drag", dragged)
-                    .on("end", dragended))
-                .on("mouseover", showHoverBox)
-                .on("mousemove", moveHoverBox)
-                .on("mouseout", hideHoverBox);
+                .on("mouseover", highlightGraphSegments)
+                .on("mouseout", function(event, d) {
+                    removeGraphHighlights();
+                    if (activeHoverBoxNode === d.id) {
+                        hideHoverBox();
+                    }
+                })
+                .on("click", toggleHoverBox);
+
+            const nodeLabel = nodeGroup
+                .selectAll("text")
+                .data(graph.nodes)
+                .join("text")
+                .attr("class", "node-label")
+                .attr("dy", "0.35em") // Vertically center text
+                .text(d => (d.name === 'ROOT' || d.name === 'END') ? '' : d.name); // Do not display text for ROOT or END nodes
 
 
             simulation.on("tick", () => {
@@ -167,39 +244,152 @@
                     .attr("x2", d => d.target.x)
                     .attr("y2", d => d.target.y);
 
-                linkLabel
-                    .attr("x", d => (d.source.x + d.target.x) / 2)
-                    .attr("y", d => (d.source.y + d.target.y) / 2);
-
                 node
                     .attr("cx", d => d.x)
                     .attr("cy", d => d.y);
 
+                nodeLabel
+                    .attr("x", d => d.x)
+                    .attr("y", d => d.y);
+
             });
 
-            function dragstarted(event, d) {
-                if (!event.active) simulation.alphaTarget(0.3).restart();
-                d.fx = d.x;
-                d.fy = d.y;
+            // Helper to get children of a node
+            function getNodeChildren(node, links) {
+                return links.filter(link => link.source.id === node.id).map(link => link.target);
             }
 
-            function dragged(event, d) {
-                d.fx = event.x;
-                d.fy = event.y;
+            // Helper to get all descendants of a node
+            function getNodeDescendants(node, links) {
+                const descendants = new Set();
+                const queue = [node];
+                let head = 0;
+
+                while (head < queue.length) {
+                    const currentNode = queue[head++];
+                    const children = getNodeChildren(currentNode, links);
+                    for (const child of children) {
+                        if (!descendants.has(child.id)) {
+                            descendants.add(child.id);
+                            queue.push(child);
+                        }
+                    }
+                }
+                return Array.from(descendants).map(id => graphNodes.find(n => n.id === id));
             }
 
-            function dragended(event, d) {
-                if (!event.active) simulation.alphaTarget(0);
-                d.fx = null;
-                d.fy = null;
+            // Helper to get all ancestors of a node
+            function getNodeAncestors(node, links) {
+                const ancestors = new Set();
+                const queue = [node];
+                let head = 0;
+
+                while (head < queue.length) {
+                    const currentNode = queue[head++];
+                    // Find links where the current node is the target
+                    const parents = links.filter(link => link.target.id === currentNode.id).map(link => link.source);
+                    for (const parent of parents) {
+                        if (!ancestors.has(parent.id)) {
+                            ancestors.add(parent.id);
+                            queue.push(parent);
+                        }
+                    }
+                }
+                return Array.from(ancestors).map(id => graphNodes.find(n => n.id === id));
             }
 
-            function showHoverBox(event, d) {
-                hoverBox.style("display", "block");
+            // A force to push unrelated nodes away horizontally
+            let activeHoverBoxNode = null; // Track which node's hover box is currently active
+
+            function highlightGraphSegments(event, d) {
+                if (activeHoverBoxNode !== d.id) {
+                    node.attr("class", n => {
+                        let classes = `node`;
+                        if (n.name === 'ROOT') classes += ' root';
+                        if (n.name === 'END') classes += ' sink-end-node';
+                        return classes;
+                    });
+                    nodeLabel.attr("class", "node-label"); // Reset nodeLabel class
+                    link.attr("class", "link");
+                }
+
+                // Get ancestors and descendants
+                const ancestors = getNodeAncestors(d, graphLinks);
+                const descendants = getNodeDescendants(d, graphLinks);
+
+                const ancestorIds = new Set(ancestors.map(n => n.id));
+                const descendantIds = new Set(descendants.map(n => n.id));
+
+                // Identify all node and link IDs that should be highlighted
+                const nodesToHighlight = new Set([d.id, ...ancestorIds, ...descendantIds]);
+                const linksToHighlight = new Set();
+
+                // Populate linksToHighlight based on ancestor and descendant relationships
+                graphLinks.forEach(l => {
+                    const isAncestorLink = (ancestorIds.has(l.source.id) && ancestorIds.has(l.target.id)) ||
+                                           (l.target.id === d.id && ancestorIds.has(l.source.id));
+                    const isDescendantLink = (descendantIds.has(l.source.id) && descendantIds.has(l.target.id)) ||
+                                             (l.source.id === d.id && descendantIds.has(l.target.id));
+
+                    // Also include links that are part of the direct path to/from the hovered node
+                    const isDirectPathLink = (l.source.id === d.id && descendantIds.has(l.target.id)) ||
+                                             (l.target.id === d.id && ancestorIds.has(l.source.id));
+
+                    if (isAncestorLink || isDescendantLink || isDirectPathLink) {
+                        linksToHighlight.add(l.id);
+                    }
+                });
+
+                node.classed("dimmed", n => !nodesToHighlight.has(n.id));
+                nodeLabel.classed("dimmed", n => !nodesToHighlight.has(n.id)); // Dim node labels
+                link.classed("dimmed", l => !linksToHighlight.has(l.id));
+
+                d3.select(event.currentTarget).classed("highlighted", true);
+                node.filter(n => ancestorIds.has(n.id)).classed("ancestor", true);
+                node.filter(n => descendantIds.has(n.id)).classed("descendant", true);
+
+                // Apply specific highlight classes for links
+                link.filter(l => (ancestorIds.has(l.source.id) && ancestorIds.has(l.target.id)) ||
+                                 (l.target.id === d.id && ancestorIds.has(l.source.id)))
+                    .classed("ancestor-link", true);
+
+                link.filter(l => (descendantIds.has(l.source.id) && descendantIds.has(l.target.id)) ||
+                                 (l.source.id === d.id && descendantIds.has(l.target.id)))
+                    .classed("descendant-link", true);
+
+                link.filter(l => (l.source.id === d.id && descendantIds.has(l.target.id)) ||
+                                 (l.target.id === d.id && ancestorIds.has(l.source.id)))
+                    .classed("highlighted-path", true);
+            }
+
+            function removeGraphHighlights() {
+                node.attr("class", n => {
+                    let classes = `node`;
+                    if (n.name === 'ROOT') classes += ' root';
+                    if (n.name === 'END') classes += ' sink-end-node';
+                    return classes;
+                });
+                nodeLabel.attr("class", "node-label"); // Reset nodeLabel class
+                link.attr("class", "link");
+            }
+
+            function displayHoverBox(event, d) {
+                hoverBox.classed("active", true); // Add active class for transition
                 let content = `<h4>Node: "${d.name}"</h4>`;
                 content += `<p>Level: ${d.level}</p>`;
                 hoverBox.html(content);
                 moveHoverBox(event);
+            }
+
+            function hideHoverBox() {
+                hoverBox.classed("active", false); // Remove active class for transition
+                // Delay setting display: none until transition is complete
+                setTimeout(() => {
+                    if (!hoverBox.classed("active")) { // Only hide if it's still not active
+                        hoverBox.style("visibility", "hidden");
+                    }
+                }, 200); // Match CSS transition duration
+                activeHoverBoxNode = null;
             }
 
             function moveHoverBox(event) {
@@ -208,9 +398,25 @@
                 hoverBox.style("left", `${x}px`).style("top", `${y}px`);
             }
 
-            function hideHoverBox() {
-                hoverBox.style("display", "none");
+            function toggleHoverBox(event, d) {
+                if (activeHoverBoxNode === d.id) {
+                    // Clicking the same node again, hide the hover box
+                    hideHoverBox();
+                } else {
+                    // Clicking a new node, display its hover box
+                    displayHoverBox(event, d);
+                    activeHoverBoxNode = d.id;
+                }
+                event.stopPropagation(); // Prevent click from propagating to SVG
             }
+
+            // Hide hover box if clicking on the SVG background
+            svg.on("click", (event) => {
+                // Only hide if the click wasn't on a node itself
+                if (event.target.tagName !== "circle" && activeHoverBoxNode !== null) {
+                    hideHoverBox();
+                }
+            });
         });
     </script>
 </body>
