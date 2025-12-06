@@ -213,8 +213,7 @@ class LatticeTrie:
                     links_data.append({
                         "source": current_node_id,
                         "target": node_id_map[self.end_node],
-                        "label": char,
-                        "type": "ends_word" # Special link type for visualization
+                        "label": char
                     })
                 else:
                     if child_node not in node_id_map: # If child not yet mapped, add to queue
@@ -227,8 +226,7 @@ class LatticeTrie:
                     links_data.append({
                         "source": current_node_id,
                         "target": child_node_id,
-                        "label": char,
-                        "type": "prefix"
+                        "label": char
                     })
 
         # Apply max_nodes limit for visualization

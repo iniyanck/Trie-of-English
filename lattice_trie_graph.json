@@ -180,320 +180,267 @@
         {
             "source": 0,
             "target": 1,
-            "label": "t",
-            "type": "prefix"
+            "label": "t"
         },
         {
             "source": 0,
             "target": 2,
-            "label": "b",
-            "type": "prefix"
+            "label": "b"
         },
         {
             "source": 0,
             "target": 3,
-            "label": "a",
-            "type": "prefix"
+            "label": "a"
         },
         {
             "source": 0,
             "target": 4,
-            "label": "o",
-            "type": "prefix"
+            "label": "o"
         },
         {
             "source": 0,
             "target": 5,
-            "label": "i",
-            "type": "prefix"
+            "label": "i"
         },
         {
             "source": 0,
             "target": 6,
-            "label": "h",
-            "type": "prefix"
+            "label": "h"
         },
         {
             "source": 0,
             "target": 7,
-            "label": "f",
-            "type": "prefix"
+            "label": "f"
         },
         {
             "source": 0,
             "target": 8,
-            "label": "y",
-            "type": "prefix"
+            "label": "y"
         },
         {
             "source": 0,
             "target": 9,
-            "label": "w",
-            "type": "prefix"
+            "label": "w"
         },
         {
             "source": 0,
             "target": 10,
-            "label": "d",
-            "type": "prefix"
+            "label": "d"
         },
         {
             "source": 0,
             "target": 11,
-            "label": "s",
-            "type": "prefix"
+            "label": "s"
         },
         {
             "source": 1,
             "target": 12,
-            "label": "h",
-            "type": "prefix"
+            "label": "h"
         },
         {
             "source": 1,
             "target": 13,
-            "label": "o",
-            "type": "prefix"
+            "label": "o"
         },
         {
             "source": 2,
             "target": 14,
-            "label": "e",
-            "type": "prefix"
+            "label": "e"
         },
         {
             "source": 3,
             "target": 15,
-            "label": "n",
-            "type": "prefix"
+            "label": "n"
         },
         {
             "source": 3,
             "target": 16,
-            "label": "<END>",
-            "type": "ends_word"
+            "label": "<END>"
         },
         {
             "source": 4,
             "target": 17,
-            "label": "f",
-            "type": "prefix"
+            "label": "f"
         },
         {
             "source": 4,
             "target": 18,
-            "label": "n",
-            "type": "prefix"
+            "label": "n"
         },
         {
             "source": 5,
             "target": 18,
-            "label": "n",
-            "type": "prefix"
+            "label": "n"
         },
         {
             "source": 5,
             "target": 19,
-            "label": "t",
-            "type": "prefix"
+            "label": "t"
         },
         {
             "source": 5,
             "target": 16,
-            "label": "<END>",
-            "type": "ends_word"
+            "label": "<END>"
         },
         {
             "source": 6,
             "target": 20,
-            "label": "a",
-            "type": "prefix"
+            "label": "a"
         },
         {
             "source": 6,
             "target": 14,
-            "label": "e",
-            "type": "prefix"
+            "label": "e"
         },
         {
             "source": 7,
             "target": 21,
-            "label": "o",
-            "type": "prefix"
+            "label": "o"
         },
         {
             "source": 8,
             "target": 22,
-            "label": "o",
-            "type": "prefix"
+            "label": "o"
         },
         {
             "source": 9,
             "target": 23,
-            "label": "i",
-            "type": "prefix"
+            "label": "i"
         },
         {
             "source": 10,
             "target": 13,
-            "label": "o",
-            "type": "prefix"
+            "label": "o"
         },
         {
             "source": 11,
             "target": 24,
-            "label": "a",
-            "type": "prefix"
+            "label": "a"
         },
         {
             "source": 12,
             "target": 14,
-            "label": "e",
-            "type": "prefix"
+            "label": "e"
         },
         {
             "source": 12,
             "target": 25,
-            "label": "a",
-            "type": "prefix"
+            "label": "a"
         },
         {
             "source": 12,
             "target": 26,
-            "label": "i",
-            "type": "prefix"
+            "label": "i"
         },
         {
             "source": 13,
             "target": 16,
-            "label": "<END>",
-            "type": "ends_word"
+            "label": "<END>"
         },
         {
             "source": 14,
             "target": 16,
-            "label": "<END>",
-            "type": "ends_word"
+            "label": "<END>"
         },
         {
             "source": 14,
             "target": 27,
-            "label": "y",
-            "type": "prefix"
+            "label": "y"
         },
         {
             "source": 15,
             "target": 28,
-            "label": "d",
-            "type": "prefix"
+            "label": "d"
         },
         {
             "source": 17,
             "target": 16,
-            "label": "<END>",
-            "type": "ends_word"
+            "label": "<END>"
         },
         {
             "source": 18,
             "target": 16,
-            "label": "<END>",
-            "type": "ends_word"
+            "label": "<END>"
         },
         {
             "source": 19,
             "target": 16,
-            "label": "<END>",
-            "type": "ends_word"
+            "label": "<END>"
         },
         {
             "source": 20,
             "target": 29,
-            "label": "v",
-            "type": "prefix"
+            "label": "v"
         },
         {
             "source": 21,
             "target": 30,
-            "label": "r",
-            "type": "prefix"
+            "label": "r"
         },
         {
             "source": 22,
             "target": 31,
-            "label": "u",
-            "type": "prefix"
+            "label": "u"
         },
         {
             "source": 23,
             "target": 32,
-            "label": "t",
-            "type": "prefix"
+            "label": "t"
         },
         {
             "source": 24,
             "target": 27,
-            "label": "y",
-            "type": "prefix"
+            "label": "y"
         },
         {
             "source": 25,
             "target": 19,
-            "label": "t",
-            "type": "prefix"
+            "label": "t"
         },
         {
             "source": 26,
             "target": 33,
-            "label": "s",
-            "type": "prefix"
+            "label": "s"
         },
         {
             "source": 27,
             "target": 16,
-            "label": "<END>",
-            "type": "ends_word"
+            "label": "<END>"
         },
         {
             "source": 28,
             "target": 16,
-            "label": "<END>",
-            "type": "ends_word"
+            "label": "<END>"
         },
         {
             "source": 29,
             "target": 14,
-            "label": "e",
-            "type": "prefix"
+            "label": "e"
         },
         {
             "source": 30,
             "target": 16,
-            "label": "<END>",
-            "type": "ends_word"
+            "label": "<END>"
         },
         {
             "source": 31,
             "target": 16,
-            "label": "<END>",
-            "type": "ends_word"
+            "label": "<END>"
         },
         {
             "source": 32,
             "target": 34,
-            "label": "h",
-            "type": "prefix"
+            "label": "h"
         },
         {
             "source": 33,
             "target": 16,
-            "label": "<END>",
-            "type": "ends_word"
+            "label": "<END>"
         },
         {
             "source": 34,
             "target": 16,
-            "label": "<END>",
-            "type": "ends_word"
+            "label": "<END>"
         }
     ]
 }
