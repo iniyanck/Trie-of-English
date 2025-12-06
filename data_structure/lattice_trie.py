@@ -5,9 +5,6 @@ class Node:
     def __init__(self, char=''):
         self.char = char
         self.children = {}
-        self.is_end_of_word = False
-        self.words_ending_here = [] # Actual words that end at this node
-        self.count = 0 # How many words pass through this node (for DAWG-like context)
         self.level = 0 # Level for lattice structure
 
     # These are crucial for canonicalizing nodes in a DAWG-like structure
@@ -17,21 +14,45 @@ class Node:
     # For now, a simple hash and equality based on direct children.
     # This will not achieve a full DAWG, but will allow some merging.
 
-    def _get_hash_key(self):
+    # Node identity for merging is based on its character, its end-of-word status,
+    # and the canonical identity of its children.
+    # This requires a more sophisticated hashing/equality based on children's _get_canonical_key.
+    
+    def _get_canonical_key(self):
         # Create a tuple representing the node's structure for hashing.
         # This needs to be a stable representation, so sort children keys.
-        children_repr = tuple(sorted((k, id(v)) for k, v in self.children.items()))
-        # Removed frozenset(self.words_ending_here) from hash key to allow suffix convergence
-        return (self.char, self.is_end_of_word, children_repr)
+        
+        # Canonicalization key considers the character, its is_end_of_word status,
+        # and the canonical keys of its children.
+        # This recursive definition ensures that entire suffixes are compared.
+        
+        children_for_key = []
+        # Determine if this node represents the end of a word purely by having an '<END>' child link.
+        # This creates a distinct, stable representation for canonicalization.
+        strictly_ends_word_here = False
 
-    def __hash__(self):
-        return hash(self._get_hash_key())
+        for char, child in self.children.items():
+            if char == "<END>" and child.char == "END": # Check if it's the actual end_node link
+                strictly_ends_word_here = True
+                # The canonical key of the END node is simple and stable, no recursion needed for it here.
+                children_for_key.append(("<END>", ("END", True, ())))
+            else:
+                children_for_key.append((char, child._get_canonical_key()))
+        
+        children_repr = tuple(sorted(children_for_key))
+        
+        # The canonical key now includes:
+        # 1. The character of the node.
+        # 2. The sorted canonical representations of its children.
+        # This provides a more precise and immutable key for merging.
+        # The canonical identity is determined by the character, its direct end-of-word status,
+        # and the canonical keys of its children.
+        return (self.char, self.level, children_repr)
 
-    def __eq__(self, other):
-        if not isinstance(other, Node):
-            return NotImplemented
-        # Compare based on _get_hash_key, which now excludes words_ending_here
-        return self._get_hash_key() == other._get_hash_key()
+
+    # Note: We will NOT directly use __hash__ and __eq__ on Node objects for canonicalization
+    # in the LatticeTrie's `minimized_nodes` map directly. Instead, we'll use `_get_canonical_key`
+    # as the key for `minimized_nodes`. This avoids recursive hashing issues and allows explicit control.
 
 
 class LatticeTrie:
@@ -39,29 +60,32 @@ class LatticeTrie:
         self.root = Node()
         # Create a special sink node for all word endings
         self.end_node = Node(char="END")
-        self.end_node.is_end_of_word = True # Mark it as a special end node
+        
         self.nodes = {self.root, self.end_node} # Keep track of all *unique* nodes created, including the end_node
 
         # Stores already canonicalized nodes (suffix-equivalent nodes)
-        # Maps (char, frozenset_of_children_and_end_flag) -> canonical_node
-        self.minimized_nodes = {} # Keyed by a stable representation of node structure
+        # Maps canonical_key (tuple from _get_canonical_key) -> canonical_node
+        # Pre-add the end_node to minimized_nodes with its stable canonical key.
+        self.minimized_nodes = {self.end_node._get_canonical_key(): self.end_node}
         
-        self.words = [] # To store all words for max_word_length in _assign_levels
-
+        self.words = [] # Re-add for _assign_levels
+        
     def _get_canonical_node(self, node_to_canonicalize):
         # This function aims to find an existing canonical node that is equivalent
         # to node_to_canonicalize based on its structure (children, end-of-word).
 
-        # Build a key based on the node's properties.
-        # Using IDs of children implies that the children themselves are canonical.
-        children_canonical_ids = frozenset((k, id(v)) for k, v in node_to_canonicalize.children.items())
-        # Removed frozenset(node_to_canonicalize.words_ending_here) from key
-        key = (node_to_canonicalize.char, node_to_canonicalize.is_end_of_word, children_canonical_ids)
+        # It's assumed that when `_get_canonical_node` is called on a node, all its
+        # children have already been processed and their canonical versions are in `minimized_nodes`.
+        # This is ensured by the backward iteration in the `insert` method.
 
-        if key in self.minimized_nodes:
-            return self.minimized_nodes[key]
+        canonical_key = node_to_canonicalize._get_canonical_key()
+
+        if canonical_key in self.minimized_nodes:
+            # If an equivalent canonical node already exists, return it.
+            return self.minimized_nodes[canonical_key]
         else:
-            self.minimized_nodes[key] = node_to_canonicalize
+            # Otherwise, this node (or its structure) is new, so add it as a canonical node.
+            self.minimized_nodes[canonical_key] = node_to_canonicalize
             return node_to_canonicalize
 
     def insert(self, word):
@@ -76,17 +100,11 @@ class LatticeTrie:
                 current_node.children[char] = new_node
                 self.nodes.add(new_node)
             current_node = current_node.children[char]
-            current_node.count += 1 # Increment count of words passing through
             path_nodes_stack.append(current_node)
 
         # Instead of marking the actual node as is_end_of_word, link it to the special end_node
         # And ensure the end_node receives the highest level from all incoming paths
         current_node.children["<END>"] = self.end_node # Use a special character for the link to END
-        self.words.append(word_lower) # Store the original word for level assignment, but lowercase
-        # The words_ending_here will still be stored on the original node for context if needed,
-        # but the actual "end" will be signified by linking to the end_node.
-        current_node.is_end_of_word = True # Keep this to retain word information for visualization
-        current_node.words_ending_here.append(word_lower) # Store the lowercase version
 
         # Phase 2: Canonicalize nodes (simplified DAWG-like minimization)
         # Iterate backwards through the path to canonicalize nodes from leaves up.
@@ -100,10 +118,7 @@ class LatticeTrie:
             # Check if canonicalization results in a different node (i.e., a merge occurred)
             if canonical_version is not node_to_canonicalize:
                 # Merge properties from the redundant node to the canonical version
-                if node_to_canonicalize.is_end_of_word:
-                    canonical_version.is_end_of_word = True
-                canonical_version.words_ending_here.extend(node_to_canonicalize.words_ending_here)
-                canonical_version.count += node_to_canonicalize.count # Aggregate counts for merged paths
+                canonical_version.level = max(canonical_version.level, node_to_canonicalize.level)
 
                 # Replace the redundant node with the canonical version in its parent's children
                 if i > 0:
@@ -142,15 +157,15 @@ class LatticeTrie:
             current_node = queue.pop(0)
             processed_count += 1
 
-            for child_node in current_node.children.values():
+            for child_node in current_node.children.items(): # Changed to .items() to get (char, child_node)
                 # Update child node's level if a longer path is found through the current_node.
-                if current_node.level != -1 and current_node.level + 1 > child_node.level:
-                    child_node.level = current_node.level + 1
+                if current_node.level != -1 and current_node.level + 1 > child_node[1].level: # Access child_node from tuple
+                    child_node[1].level = current_node.level + 1
                 
                 # Decrement in-degree and add the child to the queue if all its parents have been processed.
-                in_degree[child_node] -= 1
-                if in_degree[child_node] == 0:
-                    queue.append(child_node)
+                in_degree[child_node[1]] -= 1 # Access child_node from tuple
+                if in_degree[child_node[1]] == 0:
+                    queue.append(child_node[1]) # Access child_node from tuple
         
         print(f"DEBUG: Levels assigned using a single-pass topological sort-like BFS. Processed {processed_count} nodes.")
 
@@ -177,19 +192,10 @@ class LatticeTrie:
                 node_id_map[current_node] = id_counter
             current_node_id = node_id_map[current_node]
 
-            node_suffixes = []
-            # Only include actual words for non-END nodes
-            if current_node.is_end_of_word and current_node is not self.end_node:
-                node_suffixes.extend(current_node.words_ending_here)
-
             nodes_data.append({
                 "id": current_node_id,
                 "name": current_node.char if current_node.char else "ROOT",
-                "isEndOfWord": current_node.is_end_of_word and current_node is not self.end_node, # Only mark as true if not the sink
-                "wordCount": current_node.count,
-                "wordsEndingHere": list(current_node.words_ending_here) if current_node is not self.end_node else [],
-                "suffixes": node_suffixes,
-                "level": current_node.level # Add the level to node data
+                "level": current_node.level # Re-add the level to node data
             })
 
             for char, child_node in current_node.children.items():
@@ -202,11 +208,7 @@ class LatticeTrie:
                         nodes_data.append({
                             "id": node_id_map[self.end_node],
                             "name": self.end_node.char,
-                            "isEndOfWord": True, # The sink node is always an end of word
-                            "wordCount": sum(len(w.words_ending_here) for w in self.nodes if w.is_end_of_word and w is not self.end_node), # Aggregate count
-                            "wordsEndingHere": [], # Actual words are associated with the preceding nodes
-                            "suffixes": [],
-                            "level": self.end_node.level
+                            "level": self.end_node.level # Re-add the level to the sink node
                         })
                     links_data.append({
                         "source": current_node_id,
@@ -231,27 +233,13 @@ class LatticeTrie:
 
         # Apply max_nodes limit for visualization
         if len(nodes_data) > max_nodes:
-            # Sort by wordCount to prioritize more common paths, or other heuristics
-            nodes_data.sort(key=lambda x: x['wordCount'], reverse=True)
             nodes_data = nodes_data[:max_nodes]
             # Filter links to only include visible nodes
             valid_node_ids = {node['id'] for node in nodes_data}
             links_data = [link for link in links_data if link['source'] in valid_node_ids and link['target'] in valid_node_ids]
-            print(f"Warning: Graph has {len(nodes_data)} unique nodes, displaying {len(nodes_data)} after truncation to {max_nodes}.")
-
+            print(f"Warning: Graph has {len(processed_nodes)} unique nodes, displaying {len(nodes_data)} after truncation to {max_nodes}.")
 
         return {"nodes": nodes_data, "links": links_data}
-
-    def search(self, word):
-        word_lower = word.lower()  # Convert search word to lowercase
-        current_node = self.root
-        for char in word_lower:
-            if char not in current_node.children:
-                return False
-            current_node = current_node.children[char]
-        # A word is found if the path leads to a node and that node is marked as an end of a word
-        # or if it has a link to the special end_node.
-        return current_node.is_end_of_word or ("<END>" in current_node.children and current_node.children["<END>"] is self.end_node)
 
 
 # Helper function to load words from a CSV
