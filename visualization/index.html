@@ -217,9 +217,7 @@
                 .on("mouseover", highlightGraphSegments)
                 .on("mouseout", function(event, d) {
                     removeGraphHighlights();
-                    if (activeHoverBoxNode === d.id) {
-                        hideHoverBox();
-                    }
+                    hideHoverBox(); // Hide the hover box on mouseout
                 })
                 .on("click", toggleHoverBox);
 
@@ -295,6 +293,7 @@
 
             // A force to push unrelated nodes away horizontally
             let activeHoverBoxNode = null; // Track which node's hover box is currently active
+            let hideHoverBoxTimeout = null; // To store the timeout ID for hiding the box
 
             function highlightGraphSegments(event, d) {
                 if (activeHoverBoxNode !== d.id) {
@@ -369,7 +368,16 @@
             }
 
             function displayHoverBox(event, d) {
+                // Clear any existing timeout to prevent it from interfering with a new box
+                if (hideHoverBoxTimeout) {
+                    clearTimeout(hideHoverBoxTimeout);
+                    hideHoverBoxTimeout = null;
+                }
+
+                // Immediately make visible before adding 'active' class to start transition
+                hoverBox.style("visibility", "visible");
                 hoverBox.classed("active", true); // Add active class for transition
+                
                 let content = `<h4>Node: "${d.name}" (ID: ${d.id})</h4>`;
                 content += `<p>Level: ${d.level}</p>`;
                 hoverBox.html(content);
@@ -378,11 +386,18 @@
 
             function hideHoverBox() {
                 hoverBox.classed("active", false); // Remove active class for transition
+                // Clear any existing timeout to prevent it from interfering with a new box
+                if (hideHoverBoxTimeout) {
+                    clearTimeout(hideHoverBoxTimeout);
+                    hideHoverBoxTimeout = null;
+                }
                 // Delay setting display: none until transition is complete
-                setTimeout(() => {
-                    if (!hoverBox.classed("active")) { // Only hide if it's still not active
+                hideHoverBoxTimeout = setTimeout(() => {
+                    // Only hide if it's still not active (e.g., if a new box hasn't been shown)
+                    if (!hoverBox.classed("active")) {
                         hoverBox.style("visibility", "hidden");
                     }
+                    hideHoverBoxTimeout = null; // Clear the timeout ID after it fires
                 }, 200); // Match CSS transition duration
                 activeHoverBoxNode = null;
             }
