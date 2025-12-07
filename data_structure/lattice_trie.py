@@ -21,8 +21,10 @@ class Node:
                 children_for_key.append((char, child._get_canonical_key()))
         
         children_repr = tuple(sorted(children_for_key))
-        # Use depth for the canonical key to ensure stability during insertion
-        return (self.char, self.depth, children_repr)
+        # The canonical key is based on the node's character and its children's canonical keys,
+        # effectively representing the entire suffix DAG rooted at this node.
+        # This allows nodes representing the same suffix DAG at different depths to be minimized.
+        return (self.char, children_repr)
 
 
 class LatticeTrie:
@@ -30,9 +32,9 @@ class LatticeTrie:
         self.root = Node()
         self.end_node = Node(char="END")
         # No need to set depth for end_node, its _get_canonical_key handles it
-
+        
         self.nodes = {self.root, self.end_node} 
-
+        
         self.minimized_nodes = {self.end_node._get_canonical_key(): self.end_node}
         
     def _get_canonical_node(self, node_to_canonicalize):
@@ -44,9 +46,53 @@ class LatticeTrie:
             self.minimized_nodes[canonical_key] = node_to_canonicalize
             return node_to_canonicalize
 
+    def canonicalize_suffix_dags(self):
+        """
+        Pass 2: Performs global suffix DAG canonicalization (joining common sub-DAGs).
+        This relies on recursive _get_canonical_node calls, requiring bottom-up processing 
+        of nodes based on depth.
+        """
+        # Reset tracking map for global canonicalization
+        self.minimized_nodes = {self.end_node._get_canonical_key(): self.end_node}
+        
+        # Collect all non-end nodes and sort them by depth descending (deepest first)
+        nodes_to_process = sorted(list(self.nodes - {self.end_node}), key=lambda n: n.depth, reverse=True)
+        
+        nodes_to_discard = set()
+
+        for current_node in nodes_to_process:
+            canonical_version = self._get_canonical_node(current_node)
+
+            if canonical_version is not current_node:
+                nodes_to_discard.add(current_node)
+                
+                # Update parent references to point to the canonical version
+                self._update_parents(current_node, canonical_version)
+
+        # Finally, clean up the nodes set
+        self.nodes -= nodes_to_discard
+
+    def _update_parents(self, old_node, new_node):
+        """Helper to find all parents referencing old_node and replace reference with new_node."""
+        queue = [self.root]
+        visited = {self.root}
+
+        while queue:
+            parent = queue.pop(0)
+
+            children_to_update = {}
+            
+            for char, child in parent.children.items():
+                if child is old_node:
+                    children_to_update[char] = new_node
+                elif child in self.nodes and child not in visited and child is not self.end_node:
+                    visited.add(child)
+                    queue.append(child)
+            
+            parent.children.update(children_to_update)
+
     def insert(self, word):
         word_lower = word.lower()
-        path_nodes_stack = []
         current_node = self.root
 
         # Phase 1: Standard trie insertion, setting node depth
@@ -59,25 +105,9 @@ class LatticeTrie:
                 current_node.children[char] = new_node
                 self.nodes.add(new_node)
             current_node = current_node.children[char]
-            path_nodes_stack.append(current_node)
 
         current_node.children["<END>"] = self.end_node
-
-        # Phase 2: Canonicalize nodes (simplified minimization)
-        for i in range(len(path_nodes_stack) - 1, -1, -1):
-            node_to_canonicalize = path_nodes_stack[i]
-            
-            canonical_version = self._get_canonical_node(node_to_canonicalize)
-
-            if canonical_version is not node_to_canonicalize:
-                # Replace the redundant node with the canonical version in its parent's children
-                if i > 0:
-                    parent_of_current = path_nodes_stack[i-1]
-                    for char_key, child_val in parent_of_current.children.items():
-                        if child_val is node_to_canonicalize:
-                            parent_of_current.children[char_key] = canonical_version
-                            break
-                self.nodes.discard(node_to_canonicalize)
+        # Canonicalization is deferred to canonicalize_suffix_dags()
 
     def _assign_levels(self):
         """
@@ -90,10 +120,11 @@ class LatticeTrie:
             node.level = -1
         self.root.level = 0
         
-        in_degree = {node: 0 for node in self.nodes}
+        in_degree = {node: 0 for node in self.nodes if node in self.nodes}
         for node in self.nodes:
             for child_node in node.children.values():
-                in_degree[child_node] += 1
+                if child_node in self.nodes:
+                    in_degree[child_node] += 1
 
         queue = [node for node, degree in in_degree.items() if degree == 0]
         
@@ -101,14 +132,15 @@ class LatticeTrie:
             current_node = queue.pop(0)
 
             for char, child_node in current_node.children.items():
-                if current_node.level != -1 and current_node.level + 1 > child_node.level:
-                    child_node.level = current_node.level + 1
-                
-                in_degree[child_node] -= 1
-                if in_degree[child_node] == 0:
-                    queue.append(child_node)
+                if child_node in self.nodes:
+                    if current_node.level != -1 and current_node.level + 1 > child_node.level:
+                        child_node.level = current_node.level + 1
+                    
+                    in_degree[child_node] -= 1
+                    if in_degree[child_node] == 0:
+                        queue.append(child_node)
 
-    def visualize(self, max_nodes=500):
+    def visualize(self, max_nodes=5000):
         nodes_data = []
         links_data = []
         node_id_map = {self.root: 0}
@@ -150,7 +182,7 @@ class LatticeTrie:
                         "target": node_id_map[self.end_node],
                         "label": char
                     })
-                else:
+                elif child_node in self.nodes:
                     if child_node not in node_id_map:
                         queue_for_viz.append(child_node)
                         id_counter += 1
@@ -184,11 +216,14 @@ def load_words_from_csv(filepath):
 if __name__ == "__main__":
     trie = LatticeTrie()
     # Corrected path for script execution context
-    words_filepath = "datasets\\lattice_trie_20_words.csv" 
+    words_filepath = "datasets\\test.csv" 
     words = load_words_from_csv(words_filepath)
 
     for word in words:
         trie.insert(word)
+
+    # Phase 2: Canonicalize after all insertions
+    trie.canonicalize_suffix_dags()
 
     # Assign levels after all words are inserted and canonicalized
     trie._assign_levels()

@@ -163,7 +163,7 @@
         let graphNodes = [];
         let graphLinks = [];
 
-        d3.json("../lattice_trie_graph.json").then(graph => {
+        d3.json(`../lattice_trie_graph.json?t=${new Date().getTime()}`).then(graph => {
             graphNodes = graph.nodes;
             graphLinks = graph.links;
 
@@ -182,12 +182,12 @@
                 .range([height * 0.1, height * 0.9]); // Map levels to a vertical range
 
             const simulation = d3.forceSimulation(graph.nodes)
-                .force("link", d3.forceLink(graph.links).id(d => d.id).distance(70)) // Increased link distance for better spacing
-                .force("charge", d3.forceManyBody().strength(-100)) // Reduced repulsion strength
+                .force("link", d3.forceLink(graph.links).id(d => d.id).distance(100)) // Increased link distance for better spacing
+                .force("charge", d3.forceManyBody().strength(-200)) // Increased repulsion strength
                 .force("center", d3.forceCenter(width / 2, height / 2))
                 .force("x", d3.forceX(width / 2).strength(0.1)) // Gentle pull towards the horizontal center
                 .force("y", d3.forceY(d => levelToY(d.level)).strength(1)) // Strong Y-force based on level
-                .force("collide", d3.forceCollide().radius(d => 15)); // Prevent nodes from overlapping
+                .force("collide", d3.forceCollide().radius(d => 20)); // Prevent nodes from overlapping
             // For root node, also apply an initial y position
             graph.nodes.forEach(node => {
                 if (node.name === 'ROOT') {
