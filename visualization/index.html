@@ -370,7 +370,7 @@
 
             function displayHoverBox(event, d) {
                 hoverBox.classed("active", true); // Add active class for transition
-                let content = `<h4>Node: "${d.name}"</h4>`;
+                let content = `<h4>Node: "${d.name}" (ID: ${d.id})</h4>`;
                 content += `<p>Level: ${d.level}</p>`;
                 hoverBox.html(content);
                 moveHoverBox(event);
