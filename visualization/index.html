@@ -15,7 +15,7 @@
             stroke: #fff;
             stroke-width: 1.5px;
             cursor: pointer;
-            /* Removed transitions here to allow D3 to control attributes directly for the movement */
+            transition: fill 0.3s ease, stroke 0.3s ease; /* Added transition for color */
         }
         .node.root { fill: #c6dbef; }
         .node.sink-end-node {
@@ -27,6 +27,7 @@
             stroke: #999;
             stroke-opacity: 0.1;
             stroke-width: 1px;
+            transition: stroke 0.3s ease, stroke-opacity 0.3s ease; /* Added transition */
         }
         .node-label {
             font-size: 12px;
@@ -35,7 +36,7 @@
             pointer-events: none;
             user-select: none;
             text-anchor: middle;
-            transition: opacity 0.3s ease; /* Keep opacity transition */
+            transition: opacity 0.3s ease;
         }
         
         /* Hover Box Styles */
@@ -69,12 +70,82 @@
         .node.dimmed { fill: #ccc; stroke: #eee; opacity: 0.1; }
         .link.dimmed { stroke: #ccc; stroke-opacity: 0.05; }
         .node-label.dimmed { opacity: 0; }
+
+        /* --- NEW UI STYLES --- */
+        #ui-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 300px;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            display: none; /* Hidden by default */
+            z-index: 1000;
+            max-height: 80vh;
+            flex-direction: column;
+        }
+
+        #ui-container.visible {
+            display: flex;
+        }
+
+        button#gen-btn {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            width: 100%;
+            margin-bottom: 10px;
+            transition: background-color 0.2s;
+        }
+
+        button#gen-btn:hover {
+            background-color: #45a049;
+        }
+
+        #word-list {
+            overflow-y: auto;
+            flex-grow: 1;
+            border-top: 1px solid #eee;
+            margin-top: 5px;
+            padding-top: 10px;
+        }
+
+        .generated-word {
+            display: block;
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            margin-bottom: 5px;
+            padding: 4px;
+            background: #f9f9f9;
+            border-radius: 3px;
+        }
+
+        /* Color Coding for Text */
+        .char-ancestor { color: #74c476; font-weight: bold; } /* Green */
+        .char-focus { color: #ff7f0e; font-weight: bold; text-decoration: underline; } /* Orange */
+        .char-descendant { color: #6baed6; font-weight: bold; } /* Blue */
+        
+        .empty-msg { color: #999; font-style: italic; font-size: 12px; text-align: center; }
+
     </style>
     <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
 <body>
     <div id="graph-container"></div>
     <div class="hover-box" id="hover-box"></div>
+
+    <div id="ui-container">
+        <h3 style="margin-top:0; color:#333;">Subgraph Tools</h3>
+        <p style="font-size:12px; color:#666; margin-bottom: 10px;">Node frozen. Generate words passing through this node:</p>
+        <button id="gen-btn">Generate Words</button>
+        <div id="word-list"></div>
+    </div>
 
     <script>
         const width = window.innerWidth;
@@ -93,18 +164,28 @@
         const linkGroup = g.append("g").attr("class", "links");
         const nodeGroup = g.append("g").attr("class", "nodes");
         const hoverBox = d3.select("#hover-box");
+        
+        // UI Elements
+        const uiContainer = d3.select("#ui-container");
+        const genBtn = d3.select("#gen-btn");
+        const wordList = d3.select("#word-list");
+
+        // FIX 1: Explicitly force hide on load
+        uiContainer.style("display", "none");
 
         let graphNodes = [];
         let graphLinks = [];
         let simulation;
+
+        // --- STATE VARIABLES ---
+        let isGraphFrozen = false;
+        let frozenNodeId = null;
 
         // --- CONFIGURATION ---
         const SUBGRAPH_CONFIG = {
             verticalSpacing: 60,
             horizontalSpacing: 40,
             transitionDuration: 500,
-            // 0.9 means move 90% of the way to the organized column. 
-            // 1.0 would be perfect overlap (bad), 0.0 is no movement.
             focusStrength: 0.9 
         };
 
@@ -127,11 +208,8 @@
                 nodes.forEach((node, i) => {
                     node.fx = startX + i * 50;
                     node.fy = levelToY(level);
-                    
-                    // STORE ORIGINAL POSITIONS
                     node.originalFx = node.fx;
                     node.originalFy = node.fy;
-                    
                     node.x = node.fx;
                     node.y = node.fy;
                 });
@@ -159,12 +237,21 @@
                     if (d.name === 'END') classes += ' sink-end-node';
                     return classes;
                 })
-                .on("mouseover", highlightGraphSegments)
-                .on("mouseout", function(event, d) {
-                    removeGraphHighlights();
-                    hideHoverBox();
+                .on("mouseover", (event, d) => {
+                    if (!isGraphFrozen) {
+                        highlightGraphSegments(event, d);
+                        displayHoverBox(event, d);
+                    } else if (d.id === frozenNodeId) {
+                        displayHoverBox(event, d);
+                    }
                 })
-                .on("click", toggleHoverBox);
+                .on("mouseout", (event, d) => {
+                    hideHoverBox();
+                    if (!isGraphFrozen) {
+                        removeGraphHighlights();
+                    }
+                })
+                .on("click", handleNodeClick);
 
             const nodeLabel = nodeGroup
                 .selectAll("text")
@@ -190,8 +277,103 @@
                     .attr("y", d => d.y);
             }
 
-            // --- Helper Functions ---
+            // --- Word Generation Logic ---
+            
+            genBtn.on("click", () => {
+                if (!frozenNodeId) return;
+                const centerNode = graphNodes.find(n => n.id === frozenNodeId);
+                if (!centerNode) return;
+                
+                generateWords(centerNode);
+            });
 
+            function generateWords(centerNode) {
+                wordList.html(""); // Clear previous
+
+                if (centerNode.name === 'ROOT' || centerNode.name === 'END') {
+                    wordList.html("<div class='empty-msg'>Cannot generate words from ROOT or END nodes.</div>");
+                    return;
+                }
+
+                // 1. Get all paths from ROOT to centerNode (Ancestors)
+                const prefixes = findPrefixes(centerNode);
+                
+                // 2. Get all paths from centerNode to END (Descendants)
+                const suffixes = findSuffixes(centerNode);
+
+                // 3. Combine
+                let count = 0;
+                if (prefixes.length === 0 && suffixes.length === 0) {
+                      wordList.html("<div class='empty-msg'>No valid paths found.</div>");
+                      return;
+                }
+
+                const prefixList = prefixes.length > 0 ? prefixes : [""];
+                const suffixList = suffixes.length > 0 ? suffixes : [""];
+
+                prefixList.forEach(pre => {
+                    suffixList.forEach(suf => {
+                        count++;
+                        const div = document.createElement('div');
+                        div.className = 'generated-word';
+                        
+                        // Construct colored HTML
+                        const html = `
+                            <span class="char-ancestor">${pre}</span><span class="char-focus">${centerNode.name}</span><span class="char-descendant">${suf}</span>
+                        `;
+                        div.innerHTML = html;
+                        wordList.node().appendChild(div);
+                    });
+                });
+            }
+
+            // Backward DFS to finding strings from Root -> Node
+            function findPrefixes(targetNode) {
+                let results = [];
+                
+                function backtrack(currentNode, currentString) {
+                    const incomingLinks = graphLinks.filter(l => l.target.id === currentNode.id);
+                    
+                    if (incomingLinks.length === 0) {
+                        return;
+                    }
+
+                    incomingLinks.forEach(link => {
+                        const parent = link.source;
+                        if (parent.name === 'ROOT') {
+                            results.push(currentString);
+                        } else {
+                            backtrack(parent, parent.name + currentString);
+                        }
+                    });
+                }
+
+                backtrack(targetNode, "");
+                return results;
+            }
+
+            // Forward DFS to find strings from Node -> End
+            function findSuffixes(sourceNode) {
+                let results = [];
+
+                function forward(currentNode, currentString) {
+                    const outgoingLinks = graphLinks.filter(l => l.source.id === currentNode.id);
+
+                    outgoingLinks.forEach(link => {
+                        const child = link.target;
+                        if (child.name === 'END') {
+                            results.push(currentString);
+                        } else {
+                            forward(child, currentString + child.name);
+                        }
+                    });
+                }
+
+                forward(sourceNode, "");
+                return results;
+            }
+
+            // --- Helper Functions ---
             function getNodeChildren(node, links) {
                 return links.filter(link => link.source.id === node.id).map(link => link.target);
             }
@@ -233,134 +415,146 @@
             // --- Logic for Mini-Subgraph Calculation ---
             function calculateCompactLayout(centerNode, ancestors, descendants) {
                 const layoutMap = new Map();
-
-                // 1. Position Center Node
                 layoutMap.set(centerNode.id, { x: centerNode.x, y: centerNode.y });
 
-                // 2. Position Ancestors
                 const ancestorsByLevel = d3.group(ancestors, d => d.level);
                 const ancLevels = Array.from(ancestorsByLevel.keys()).sort((a, b) => b - a);
 
                 ancLevels.forEach(level => {
                     const levelNodes = ancestorsByLevel.get(level);
                     levelNodes.sort((a, b) => a.id - b.id);
-                    
                     const levelDiff = centerNode.level - level;
                     const y = centerNode.y - (levelDiff * SUBGRAPH_CONFIG.verticalSpacing);
-                    
                     const width = (levelNodes.length - 1) * SUBGRAPH_CONFIG.horizontalSpacing;
                     const startX = centerNode.x - (width / 2);
-
                     levelNodes.forEach((node, i) => {
-                        layoutMap.set(node.id, {
-                            x: startX + (i * SUBGRAPH_CONFIG.horizontalSpacing),
-                            y: y
-                        });
+                        layoutMap.set(node.id, { x: startX + (i * SUBGRAPH_CONFIG.horizontalSpacing), y: y });
                     });
                 });
 
-                // 3. Position Descendants
                 const descendantsByLevel = d3.group(descendants, d => d.level);
                 const descLevels = Array.from(descendantsByLevel.keys()).sort((a, b) => a - b);
 
                 descLevels.forEach(level => {
                     const levelNodes = descendantsByLevel.get(level);
                     levelNodes.sort((a, b) => a.id - b.id);
-
                     const levelDiff = level - centerNode.level;
                     const y = centerNode.y + (levelDiff * SUBGRAPH_CONFIG.verticalSpacing);
-
                     const width = (levelNodes.length - 1) * SUBGRAPH_CONFIG.horizontalSpacing;
                     const startX = centerNode.x - (width / 2);
-
                     levelNodes.forEach((node, i) => {
-                        layoutMap.set(node.id, {
-                            x: startX + (i * SUBGRAPH_CONFIG.horizontalSpacing),
-                            y: y
-                        });
+                        layoutMap.set(node.id, { x: startX + (i * SUBGRAPH_CONFIG.horizontalSpacing), y: y });
                     });
                 });
 
                 return layoutMap;
             }
 
-            let activeHoverBoxNode = null;
-            let hideHoverBoxTimeout = null;
+            // --- Click Handler (Freeze/Unfreeze) ---
+            function handleNodeClick(event, d) {
+                event.stopPropagation();
 
-            function highlightGraphSegments(event, d) {
-                if (activeHoverBoxNode !== d.id) {
-                    simulation.stop();
-
-                    const ancestors = getNodeAncestors(d, graphLinks);
-                    const descendants = getNodeDescendants(d, graphLinks);
+                if (isGraphFrozen && frozenNodeId === d.id) {
+                    // Unfreeze
+                    isGraphFrozen = false;
+                    frozenNodeId = null;
+                    removeGraphHighlights();
+                    hideHoverBox();
+                    uiContainer.style("display", "none");
+                    wordList.html(""); 
+                } else {
+                    // Freeze (or switch node)
+                    isGraphFrozen = true;
+                    frozenNodeId = d.id;
                     
-                    const ancestorIds = new Set(ancestors.map(n => n.id));
-                    const descendantIds = new Set(descendants.map(n => n.id));
-                    const allHighlightIds = new Set([d.id, ...ancestorIds, ...descendantIds]);
-
-                    // 1. Get Ideal Straight Line Positions
-                    const perfectPositions = calculateCompactLayout(d, ancestors, descendants);
+                    highlightGraphSegments(event, d);
+                    displayHoverBox(event, d);
                     
-                    // 2. Calculate "90% way there" Positions (Interpolation)
-                    const interpolatedPositions = new Map();
-                    
-                    perfectPositions.forEach((target, id) => {
-                        // Find the original node to get its starting coordinates
-                        const n = graphNodes.find(node => node.id === id);
-                        if (n) {
-                            // Linear Interpolation: Current + (Target - Current) * 0.9
-                            // We interpolate from the ORIGINAL grid position (originalFx) to the target
-                            // This ensures the "skew" is based on their grid offset.
-                            const newX = n.originalFx + (target.x - n.originalFx) * SUBGRAPH_CONFIG.focusStrength;
-                            const newY = n.originalFy + (target.y - n.originalFy) * SUBGRAPH_CONFIG.focusStrength;
-                            
-                            interpolatedPositions.set(id, { x: newX, y: newY });
-                        }
-                    });
-
-                    // --- Apply Classes (Visuals) ---
-                    node.classed("dimmed", n => !allHighlightIds.has(n.id));
-                    nodeLabel.classed("dimmed", n => !allHighlightIds.has(n.id));
-                    
-                    link.classed("dimmed", l => {
-                            const isAncestorLink = ancestorIds.has(l.source.id) && ancestorIds.has(l.target.id);
-                            const isDescendantLink = descendantIds.has(l.source.id) && descendantIds.has(l.target.id);
-                            const isConnectorUp = l.target.id === d.id && ancestorIds.has(l.source.id);
-                            const isConnectorDown = l.source.id === d.id && descendantIds.has(l.target.id);
-                            return !(isAncestorLink || isDescendantLink || isConnectorUp || isConnectorDown);
-                    });
-
-                    d3.select(event.currentTarget).classed("highlighted", true);
-                    node.filter(n => ancestorIds.has(n.id)).classed("ancestor", true);
-                    node.filter(n => descendantIds.has(n.id)).classed("descendant", true);
-
-                    link.classed("ancestor-link", l => (ancestorIds.has(l.source.id) && ancestorIds.has(l.target.id)) || (l.target.id === d.id && ancestorIds.has(l.source.id)));
-                    link.classed("descendant-link", l => (descendantIds.has(l.source.id) && descendantIds.has(l.target.id)) || (l.source.id === d.id && descendantIds.has(l.target.id)));
-                    link.classed("highlighted-path", l => (l.source.id === d.id && descendantIds.has(l.target.id)) || (l.target.id === d.id && ancestorIds.has(l.source.id)));
-
-                    // --- Animate to Interpolated Positions ---
-                    
-                    // 1. Move Nodes
-                    node.transition().duration(SUBGRAPH_CONFIG.transitionDuration)
-                        .attr("cx", n => interpolatedPositions.has(n.id) ? interpolatedPositions.get(n.id).x : n.x)
-                        .attr("cy", n => interpolatedPositions.has(n.id) ? interpolatedPositions.get(n.id).y : n.y);
-
-                    // 2. Move Labels
-                    nodeLabel.transition().duration(SUBGRAPH_CONFIG.transitionDuration)
-                        .attr("x", n => interpolatedPositions.has(n.id) ? interpolatedPositions.get(n.id).x : n.x)
-                        .attr("y", n => interpolatedPositions.has(n.id) ? interpolatedPositions.get(n.id).y : n.y);
-
-                    // 3. Move Links
-                    link.transition().duration(SUBGRAPH_CONFIG.transitionDuration)
-                        .attr("x1", l => interpolatedPositions.has(l.source.id) ? interpolatedPositions.get(l.source.id).x : l.source.x)
-                        .attr("y1", l => interpolatedPositions.has(l.source.id) ? interpolatedPositions.get(l.source.id).y : l.source.y)
-                        .attr("x2", l => interpolatedPositions.has(l.target.id) ? interpolatedPositions.get(l.target.id).x : l.target.x)
-                        .attr("y2", l => interpolatedPositions.has(l.target.id) ? interpolatedPositions.get(l.target.id).y : l.target.y);
+                    // Show UI
+                    uiContainer.style("display", "flex");
+                    wordList.html(""); // Clear old words immediately when switching
                 }
             }
 
+            function highlightGraphSegments(event, d) {
+                simulation.stop();
+
+                // FIX 2: RESET ALL CLASSES FIRST
+                // This ensures that if we are switching from Node A to Node B,
+                // Node A's ancestors don't stay colored green.
+                node.classed("dimmed", false)
+                    .classed("highlighted", false)
+                    .classed("ancestor", false)
+                    .classed("descendant", false);
+
+                nodeLabel.classed("dimmed", false);
+
+                link.classed("dimmed", false)
+                    .classed("highlighted-path", false)
+                    .classed("ancestor-link", false)
+                    .classed("descendant-link", false);
+
+                // Now calculate new set
+                const ancestors = getNodeAncestors(d, graphLinks);
+                const descendants = getNodeDescendants(d, graphLinks);
+                
+                const ancestorIds = new Set(ancestors.map(n => n.id));
+                const descendantIds = new Set(descendants.map(n => n.id));
+                const allHighlightIds = new Set([d.id, ...ancestorIds, ...descendantIds]);
+
+                const perfectPositions = calculateCompactLayout(d, ancestors, descendants);
+                const interpolatedPositions = new Map();
+                
+                perfectPositions.forEach((target, id) => {
+                    const n = graphNodes.find(node => node.id === id);
+                    if (n) {
+                        const newX = n.originalFx + (target.x - n.originalFx) * SUBGRAPH_CONFIG.focusStrength;
+                        const newY = n.originalFy + (target.y - n.originalFy) * SUBGRAPH_CONFIG.focusStrength;
+                        interpolatedPositions.set(id, { x: newX, y: newY });
+                    }
+                });
+
+                // Apply new classes
+                node.classed("dimmed", n => !allHighlightIds.has(n.id));
+                nodeLabel.classed("dimmed", n => !allHighlightIds.has(n.id));
+                
+                link.classed("dimmed", l => {
+                        const isAncestorLink = ancestorIds.has(l.source.id) && ancestorIds.has(l.target.id);
+                        const isDescendantLink = descendantIds.has(l.source.id) && descendantIds.has(l.target.id);
+                        const isConnectorUp = l.target.id === d.id && ancestorIds.has(l.source.id);
+                        const isConnectorDown = l.source.id === d.id && descendantIds.has(l.target.id);
+                        return !(isAncestorLink || isDescendantLink || isConnectorUp || isConnectorDown);
+                });
+
+                d3.select(event.currentTarget).classed("highlighted", true);
+                node.filter(n => n.id === d.id).classed("highlighted", true);
+
+                node.filter(n => ancestorIds.has(n.id)).classed("ancestor", true);
+                node.filter(n => descendantIds.has(n.id)).classed("descendant", true);
+
+                link.classed("ancestor-link", l => (ancestorIds.has(l.source.id) && ancestorIds.has(l.target.id)) || (l.target.id === d.id && ancestorIds.has(l.source.id)));
+                link.classed("descendant-link", l => (descendantIds.has(l.source.id) && descendantIds.has(l.target.id)) || (l.source.id === d.id && descendantIds.has(l.target.id)));
+                link.classed("highlighted-path", l => (l.source.id === d.id && descendantIds.has(l.target.id)) || (l.target.id === d.id && ancestorIds.has(l.source.id)));
+
+                // Animation
+                node.transition().duration(SUBGRAPH_CONFIG.transitionDuration)
+                    .attr("cx", n => interpolatedPositions.has(n.id) ? interpolatedPositions.get(n.id).x : n.x)
+                    .attr("cy", n => interpolatedPositions.has(n.id) ? interpolatedPositions.get(n.id).y : n.y);
+
+                nodeLabel.transition().duration(SUBGRAPH_CONFIG.transitionDuration)
+                    .attr("x", n => interpolatedPositions.has(n.id) ? interpolatedPositions.get(n.id).x : n.x)
+                    .attr("y", n => interpolatedPositions.has(n.id) ? interpolatedPositions.get(n.id).y : n.y);
+
+                link.transition().duration(SUBGRAPH_CONFIG.transitionDuration)
+                    .attr("x1", l => interpolatedPositions.has(l.source.id) ? interpolatedPositions.get(l.source.id).x : l.source.x)
+                    .attr("y1", l => interpolatedPositions.has(l.source.id) ? interpolatedPositions.get(l.source.id).y : l.source.y)
+                    .attr("x2", l => interpolatedPositions.has(l.target.id) ? interpolatedPositions.get(l.target.id).x : l.target.x)
+                    .attr("y2", l => interpolatedPositions.has(l.target.id) ? interpolatedPositions.get(l.target.id).y : l.target.y);
+            }
+
             function removeGraphHighlights() {
-                // Reset Classes
+                if (isGraphFrozen) return;
+
                 node.attr("class", n => {
                     let classes = `node`;
                     if (n.name === 'ROOT') classes += ' root';
@@ -370,7 +564,6 @@
                 nodeLabel.attr("class", "node-label");
                 link.attr("class", "link");
 
-                // --- Animate Back to Original Grid ---
                 const t = d3.transition().duration(SUBGRAPH_CONFIG.transitionDuration);
 
                 node.transition(t)
@@ -395,7 +588,9 @@
                     });
             }
 
-            // ... (Hover box functions remain identical) ...
+            // --- Tooltip Logic ---
+            let hideHoverBoxTimeout = null;
+
             function displayHoverBox(event, d) {
                 if (hideHoverBoxTimeout) {
                     clearTimeout(hideHoverBoxTimeout);
@@ -414,7 +609,6 @@
                 hoverBox.classed("active", false);
                 if (hideHoverBoxTimeout) {
                     clearTimeout(hideHoverBoxTimeout);
-                    hideHoverBoxTimeout = null;
                 }
                 hideHoverBoxTimeout = setTimeout(() => {
                     if (!hoverBox.classed("active")) {
@@ -422,7 +616,6 @@
                     }
                     hideHoverBoxTimeout = null;
                 }, 200);
-                activeHoverBoxNode = null;
             }
 
             function moveHoverBox(event) {
@@ -431,19 +624,17 @@
                 hoverBox.style("left", `${x}px`).style("top", `${y}px`);
             }
 
-            function toggleHoverBox(event, d) {
-                if (activeHoverBoxNode === d.id) {
-                    hideHoverBox();
-                } else {
-                    displayHoverBox(event, d);
-                    activeHoverBoxNode = d.id;
-                }
-                event.stopPropagation();
-            }
-
+            // Background Click -> Unfreeze All
             svg.on("click", (event) => {
-                if (event.target.tagName !== "circle" && activeHoverBoxNode !== null) {
+                const targetTag = event.target.tagName;
+                if (targetTag !== "circle" && isGraphFrozen) {
+                    isGraphFrozen = false;
+                    frozenNodeId = null;
+                    removeGraphHighlights();
                     hideHoverBox();
+                    // Hide UI on bg click
+                    uiContainer.style("display", "none");
+                    wordList.html("");
                 }
             });
         });
