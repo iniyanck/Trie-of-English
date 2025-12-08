@@ -8,7 +8,7 @@ The key benefit is that common suffixes are canonicalized and reused across the 
 
 📁 **Project Structure**
 
-Your project is organized into three distinct directories:
+The project is organized into three distinct directories:
 
 ```
 /project_root
@@ -98,3 +98,4 @@ Once the graph is loaded, you can:
 - **Generate Words**: Click the "Generate Words" button in the top-right panel to list all valid words formed by combining the highlighted prefixes and suffixes.
 - **Unfreeze**: Click the selected node again or click the background to return to the dynamic layout.
 - **Theme Toggle**: Use the icon in the top-left to switch between Light and Dark modes.
+
