@@ -348,6 +348,21 @@ d3.json(`../lattice_trie_graph.json?t=${new Date().getTime()}`).then(graph => {
     function highlightGraphSegments(event, d) {
         simulation.stop();
 
+        // --- START FIX ---
+        // Sync the data coordinates with the current visual coordinates.
+        // This ensures the new compact layout is anchored exactly where 
+        // the node is currently visible, preventing the "jump".
+        const currentElement = d3.select(event.currentTarget);
+        // We use safe parsing in case the attribute isn't set yet (rare)
+        const currentCx = parseFloat(currentElement.attr("cx"));
+        const currentCy = parseFloat(currentElement.attr("cy"));
+
+        if (!isNaN(currentCx) && !isNaN(currentCy)) {
+            d.x = currentCx;
+            d.y = currentCy;
+        }
+        // --- END FIX ---
+
         node.classed("dimmed", false)
             .classed("highlighted", false)
             .classed("ancestor", false)
@@ -367,12 +382,15 @@ d3.json(`../lattice_trie_graph.json?t=${new Date().getTime()}`).then(graph => {
         const descendantIds = new Set(descendants.map(n => n.id));
         const allHighlightIds = new Set([d.id, ...ancestorIds, ...descendantIds]);
 
+        // This function uses d.x and d.y as the anchor, which we just updated above
         const perfectPositions = calculateCompactLayout(d, ancestors, descendants);
+        
         const interpolatedPositions = new Map();
         
         perfectPositions.forEach((target, id) => {
             const n = graphNodes.find(node => node.id === id);
             if (n) {
+                // We interpolate based on the anchor's new position
                 const newX = n.originalFx + (target.x - n.originalFx) * SUBGRAPH_CONFIG.focusStrength;
                 const newY = n.originalFy + (target.y - n.originalFy) * SUBGRAPH_CONFIG.focusStrength;
                 interpolatedPositions.set(id, { x: newX, y: newY });
