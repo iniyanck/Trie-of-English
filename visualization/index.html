@@ -98,11 +98,14 @@
         let graphLinks = [];
         let simulation;
 
-        // Configuration for the mini-subgraph layout
+        // --- CONFIGURATION ---
         const SUBGRAPH_CONFIG = {
-            verticalSpacing: 60,   // Vertical distance between levels
-            horizontalSpacing: 40, // Horizontal distance between siblings
-            transitionDuration: 500 // Animation speed in ms
+            verticalSpacing: 60,
+            horizontalSpacing: 40,
+            transitionDuration: 500,
+            // 0.9 means move 90% of the way to the organized column. 
+            // 1.0 would be perfect overlap (bad), 0.0 is no movement.
+            focusStrength: 0.9 
         };
 
         d3.json(`../lattice_trie_graph.json?t=${new Date().getTime()}`).then(graph => {
@@ -124,10 +127,11 @@
                 nodes.forEach((node, i) => {
                     node.fx = startX + i * 50;
                     node.fy = levelToY(level);
-                    // STORE ORIGINAL POSITIONS FOR RESTORATION
+                    
+                    // STORE ORIGINAL POSITIONS
                     node.originalFx = node.fx;
                     node.originalFy = node.fy;
-                    // Initialize current position to target to prevent jump on load
+                    
                     node.x = node.fx;
                     node.y = node.fy;
                 });
@@ -228,24 +232,22 @@
 
             // --- Logic for Mini-Subgraph Calculation ---
             function calculateCompactLayout(centerNode, ancestors, descendants) {
-                const layoutMap = new Map(); // Store id -> {x, y}
+                const layoutMap = new Map();
 
-                // 1. Position Center Node (Keep it where it is or center of screen? Let's keep it where it is)
+                // 1. Position Center Node
                 layoutMap.set(centerNode.id, { x: centerNode.x, y: centerNode.y });
 
-                // 2. Position Ancestors (Above center)
+                // 2. Position Ancestors
                 const ancestorsByLevel = d3.group(ancestors, d => d.level);
-                // Sort levels descending (closest to node first)
                 const ancLevels = Array.from(ancestorsByLevel.keys()).sort((a, b) => b - a);
 
                 ancLevels.forEach(level => {
                     const levelNodes = ancestorsByLevel.get(level);
-                    levelNodes.sort((a, b) => a.id - b.id); // consistent sort
+                    levelNodes.sort((a, b) => a.id - b.id);
                     
                     const levelDiff = centerNode.level - level;
                     const y = centerNode.y - (levelDiff * SUBGRAPH_CONFIG.verticalSpacing);
                     
-                    // Center horizontally relative to parent
                     const width = (levelNodes.length - 1) * SUBGRAPH_CONFIG.horizontalSpacing;
                     const startX = centerNode.x - (width / 2);
 
@@ -257,7 +259,7 @@
                     });
                 });
 
-                // 3. Position Descendants (Below center)
+                // 3. Position Descendants
                 const descendantsByLevel = d3.group(descendants, d => d.level);
                 const descLevels = Array.from(descendantsByLevel.keys()).sort((a, b) => a - b);
 
@@ -287,7 +289,6 @@
 
             function highlightGraphSegments(event, d) {
                 if (activeHoverBoxNode !== d.id) {
-                    // STOP SIMULATION to take manual control of positions
                     simulation.stop();
 
                     const ancestors = getNodeAncestors(d, graphLinks);
@@ -297,23 +298,38 @@
                     const descendantIds = new Set(descendants.map(n => n.id));
                     const allHighlightIds = new Set([d.id, ...ancestorIds, ...descendantIds]);
 
-                    // Calculate the new compact positions
-                    const targetPositions = calculateCompactLayout(d, ancestors, descendants);
+                    // 1. Get Ideal Straight Line Positions
+                    const perfectPositions = calculateCompactLayout(d, ancestors, descendants);
+                    
+                    // 2. Calculate "90% way there" Positions (Interpolation)
+                    const interpolatedPositions = new Map();
+                    
+                    perfectPositions.forEach((target, id) => {
+                        // Find the original node to get its starting coordinates
+                        const n = graphNodes.find(node => node.id === id);
+                        if (n) {
+                            // Linear Interpolation: Current + (Target - Current) * 0.9
+                            // We interpolate from the ORIGINAL grid position (originalFx) to the target
+                            // This ensures the "skew" is based on their grid offset.
+                            const newX = n.originalFx + (target.x - n.originalFx) * SUBGRAPH_CONFIG.focusStrength;
+                            const newY = n.originalFy + (target.y - n.originalFy) * SUBGRAPH_CONFIG.focusStrength;
+                            
+                            interpolatedPositions.set(id, { x: newX, y: newY });
+                        }
+                    });
 
                     // --- Apply Classes (Visuals) ---
                     node.classed("dimmed", n => !allHighlightIds.has(n.id));
                     nodeLabel.classed("dimmed", n => !allHighlightIds.has(n.id));
                     
-                    // Simple Logic: Dim all links not involved
                     link.classed("dimmed", l => {
-                         const isAncestorLink = ancestorIds.has(l.source.id) && ancestorIds.has(l.target.id);
-                         const isDescendantLink = descendantIds.has(l.source.id) && descendantIds.has(l.target.id);
-                         const isConnectorUp = l.target.id === d.id && ancestorIds.has(l.source.id);
-                         const isConnectorDown = l.source.id === d.id && descendantIds.has(l.target.id);
-                         return !(isAncestorLink || isDescendantLink || isConnectorUp || isConnectorDown);
+                            const isAncestorLink = ancestorIds.has(l.source.id) && ancestorIds.has(l.target.id);
+                            const isDescendantLink = descendantIds.has(l.source.id) && descendantIds.has(l.target.id);
+                            const isConnectorUp = l.target.id === d.id && ancestorIds.has(l.source.id);
+                            const isConnectorDown = l.source.id === d.id && descendantIds.has(l.target.id);
+                            return !(isAncestorLink || isDescendantLink || isConnectorUp || isConnectorDown);
                     });
 
-                    // Highlight specific types
                     d3.select(event.currentTarget).classed("highlighted", true);
                     node.filter(n => ancestorIds.has(n.id)).classed("ancestor", true);
                     node.filter(n => descendantIds.has(n.id)).classed("descendant", true);
@@ -322,30 +338,24 @@
                     link.classed("descendant-link", l => (descendantIds.has(l.source.id) && descendantIds.has(l.target.id)) || (l.source.id === d.id && descendantIds.has(l.target.id)));
                     link.classed("highlighted-path", l => (l.source.id === d.id && descendantIds.has(l.target.id)) || (l.target.id === d.id && ancestorIds.has(l.source.id)));
 
-                    // --- Animate Positions (Motion) ---
+                    // --- Animate to Interpolated Positions ---
                     
                     // 1. Move Nodes
                     node.transition().duration(SUBGRAPH_CONFIG.transitionDuration)
-                        .attr("cx", n => {
-                            if (targetPositions.has(n.id)) return targetPositions.get(n.id).x;
-                            return n.x; // Stay in current spot if dimmed
-                        })
-                        .attr("cy", n => {
-                            if (targetPositions.has(n.id)) return targetPositions.get(n.id).y;
-                            return n.y; // Stay in current spot if dimmed
-                        });
+                        .attr("cx", n => interpolatedPositions.has(n.id) ? interpolatedPositions.get(n.id).x : n.x)
+                        .attr("cy", n => interpolatedPositions.has(n.id) ? interpolatedPositions.get(n.id).y : n.y);
 
                     // 2. Move Labels
                     nodeLabel.transition().duration(SUBGRAPH_CONFIG.transitionDuration)
-                        .attr("x", n => targetPositions.has(n.id) ? targetPositions.get(n.id).x : n.x)
-                        .attr("y", n => targetPositions.has(n.id) ? targetPositions.get(n.id).y : n.y);
+                        .attr("x", n => interpolatedPositions.has(n.id) ? interpolatedPositions.get(n.id).x : n.x)
+                        .attr("y", n => interpolatedPositions.has(n.id) ? interpolatedPositions.get(n.id).y : n.y);
 
                     // 3. Move Links
                     link.transition().duration(SUBGRAPH_CONFIG.transitionDuration)
-                        .attr("x1", l => targetPositions.has(l.source.id) ? targetPositions.get(l.source.id).x : l.source.x)
-                        .attr("y1", l => targetPositions.has(l.source.id) ? targetPositions.get(l.source.id).y : l.source.y)
-                        .attr("x2", l => targetPositions.has(l.target.id) ? targetPositions.get(l.target.id).x : l.target.x)
-                        .attr("y2", l => targetPositions.has(l.target.id) ? targetPositions.get(l.target.id).y : l.target.y);
+                        .attr("x1", l => interpolatedPositions.has(l.source.id) ? interpolatedPositions.get(l.source.id).x : l.source.x)
+                        .attr("y1", l => interpolatedPositions.has(l.source.id) ? interpolatedPositions.get(l.source.id).y : l.source.y)
+                        .attr("x2", l => interpolatedPositions.has(l.target.id) ? interpolatedPositions.get(l.target.id).x : l.target.x)
+                        .attr("y2", l => interpolatedPositions.has(l.target.id) ? interpolatedPositions.get(l.target.id).y : l.target.y);
                 }
             }
 
@@ -361,7 +371,6 @@
                 link.attr("class", "link");
 
                 // --- Animate Back to Original Grid ---
-                
                 const t = d3.transition().duration(SUBGRAPH_CONFIG.transitionDuration);
 
                 node.transition(t)
@@ -378,19 +387,15 @@
                     .attr("x2", d => d.target.originalFx)
                     .attr("y2", d => d.target.originalFy)
                     .on("end", () => {
-                        // Optional: Restart simulation tick if needed, though for a static grid 
-                        // updating x/y data to match the visual fx/fy is good practice.
                         graphNodes.forEach(n => {
                             n.x = n.originalFx;
                             n.y = n.originalFy;
                         });
-                        // Restarting isn't strictly necessary if we trust the transition,
-                        // but ensures data consistency for the force engine.
                         simulation.alpha(0.1).restart();
                     });
             }
 
-            // ... (Hover box functions remain identical to your original code) ...
+            // ... (Hover box functions remain identical) ...
             function displayHoverBox(event, d) {
                 if (hideHoverBoxTimeout) {
                     clearTimeout(hideHoverBoxTimeout);
